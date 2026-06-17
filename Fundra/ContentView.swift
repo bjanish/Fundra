@@ -961,7 +961,7 @@ struct RecordMonthView: View {
         NavigationStack {
             Form {
                 Section("Date") {
-                    DatePicker("Record date", selection: $selectedDate, displayedComponents: .date)
+                    DatePicker("Record date", selection: $selectedDate, in: ...Date(), displayedComponents: .date)
                         .datePickerStyle(.compact)
                         .padding(.leading, 4)
                     Text("One entry per month. Recording again will update that month.")
