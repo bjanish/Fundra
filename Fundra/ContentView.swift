@@ -1,0 +1,1733 @@
+//
+//  ContentView.swift
+//  Fundra
+//
+//  Created by Brian Janish on 6/10/26.
+//
+
+import SwiftUI
+import SwiftData
+import Charts
+
+#if canImport(UIKit)
+import UIKit
+#endif
+
+import AudioToolbox
+
+// MARK: - Brand Colors
+
+let moneyGreen = Color(red: 0.26, green: 0.54, blue: 0.38)
+
+// MARK: - Number Formatting
+
+private let allowedAmountCharacters = CharacterSet(charactersIn: "0123456789.,")
+
+func filterAmountInput(_ value: String) -> String {
+    var filtered = String(value.unicodeScalars.filter { allowedAmountCharacters.contains($0) })
+    
+    // Allow only one decimal point
+    var foundFirst = false
+    filtered = String(filtered.filter { char in
+        if char == "." {
+            if foundFirst { return false }
+            foundFirst = true
+        }
+        return true
+    })
+    
+    // Limit to 2 decimal places
+    if let dotIndex = filtered.firstIndex(of: ".") {
+        let afterDot = filtered[filtered.index(after: dotIndex)...]
+        let digitsAfterDot = afterDot.filter { $0 != "," }
+        if digitsAfterDot.count > 2 {
+            let endIndex = filtered.index(dotIndex, offsetBy: 3)
+            filtered = String(filtered[...endIndex])
+        }
+    }
+    
+    return filtered
+}
+
+func abbreviatedAmount(_ amount: Double) -> String {
+    if amount >= 1_000_000 {
+        return String(format: "$%.1fM", amount / 1_000_000)
+    } else if amount >= 100_000 {
+        return String(format: "$%.0fK", amount / 1_000)
+    } else if amount >= 10_000 {
+        return String(format: "$%.1fK", amount / 1_000)
+    } else {
+        return formatFullAmount(amount)
+    }
+}
+
+func formatFullAmount(_ amount: Double) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.currencySymbol = "$"
+    if amount.truncatingRemainder(dividingBy: 1) == 0 {
+        formatter.maximumFractionDigits = 0
+    } else {
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 2
+    }
+    return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
+}
+
+struct ContentView: View {
+    @Query(sort: \Category.sortOrder) private var categories: [Category]
+    
+    var body: some View {
+        if categories.isEmpty {
+            OnboardingView()
+        } else {
+            MainView()
+        }
+    }
+}
+
+// MARK: - Onboarding
+
+struct OnboardingView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var accountNames: [String] = ["", "", ""]
+    @FocusState private var focusedField: Int?
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            VStack(spacing: 4) {
+                Text("Welcome to Fundra")
+                    .font(.title)
+                    .fontWeight(.bold)
+                Text("Add your savings accounts to get started")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.top, 60)
+            .padding(.bottom, 32)
+            
+            // Account inputs
+            VStack(spacing: 12) {
+                ForEach(0..<accountNames.count, id: \.self) { index in
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text("\(index + 1).")
+                                .foregroundColor(.secondary)
+                                .frame(width: 28)
+                            TextField("Account name", text: $accountNames[index])
+                                .textFieldStyle(.roundedBorder)
+                                .textInputAutocapitalization(.words)
+                                .autocorrectionDisabled()
+                                .onChange(of: accountNames[index]) { _, newValue in
+                                    if newValue.count > 15 { accountNames[index] = String(newValue.prefix(15)) }
+                                }
+                                .focused($focusedField, equals: index)
+                            if accountNames.count > 1 {
+                                Button {
+                                    accountNames.remove(at: index)
+                                } label: {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red.opacity(0.6))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        if isDuplicate(at: index) {
+                            Text("Already added")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                                .padding(.leading, 32)
+                        }
+                    }
+                }
+                
+                Button("＋ Add another") {
+                    accountNames.append("")
+                    focusedField = accountNames.count - 1
+                }
+                .font(.callout)
+                .padding(.top, 4)
+            }
+            .padding(.horizontal, 32)
+            
+            Spacer()
+            
+            Button("Get Started") {
+                saveAccounts()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(accountNames.allSatisfy { $0.trimmingCharacters(in: .whitespaces).isEmpty })
+            .padding(.bottom, 40)
+        }
+        .onAppear {
+            focusedField = 0
+        }
+    }
+    
+    private func saveAccounts() {
+        let validNames = accountNames
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        
+        // Remove duplicates (case-insensitive), keeping first occurrence
+        var seen = Set<String>()
+        let uniqueNames = validNames.filter { name in
+            let lower = name.lowercased()
+            if seen.contains(lower) { return false }
+            seen.insert(lower)
+            return true
+        }
+        
+        for (index, name) in uniqueNames.enumerated() {
+            let category = Category(name: name, sortOrder: index)
+            modelContext.insert(category)
+        }
+    }
+    
+    private func isDuplicate(at index: Int) -> Bool {
+        let name = accountNames[index].trimmingCharacters(in: .whitespaces).lowercased()
+        guard !name.isEmpty else { return false }
+        return accountNames.enumerated().contains { i, other in
+            i < index && other.trimmingCharacters(in: .whitespaces).lowercased() == name
+        }
+    }
+}
+
+// MARK: - Main View
+
+struct MainView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Category.sortOrder) private var categories: [Category]
+    @Query private var allBalances: [Balance]
+    @State private var showRecordMonth = false
+    @State private var showGrowthSummary = false
+    @State private var currentPeriodIndex: Int?
+    @State private var editingCategory: Category? = nil
+    @State private var editingBalance: Balance? = nil
+    @State private var showAddCategory = false
+    @State private var deletingCategory: Category? = nil
+    @State private var showDeleteMonth = false
+    @State private var undoData: [(categoryId: PersistentIdentifier, year: Int, month: Int, day: Int, amount: Double)] = []
+    @State private var showUndoToast = false
+    @State private var chartAnimating = false
+    @State private var displayedTotal: Double = 0
+    @State private var titleIconAnimating = false
+    @State private var titleTapCount = 0
+    @State private var showConfetti = false
+    @AppStorage("hasSeenLongPressTip") private var hasSeenLongPressTip = false
+    
+    @Environment(\.colorScheme) private var colorScheme
+    
+    private var chartColors: [Color] {
+        if colorScheme == .dark {
+            return [
+                Color(red: 0.30, green: 0.45, blue: 0.60),  // darker blue
+                Color(red: 0.38, green: 0.57, blue: 0.47),  // darker green
+                Color(red: 0.60, green: 0.52, blue: 0.42),  // darker tan
+                Color(red: 0.44, green: 0.37, blue: 0.60),  // darker purple
+                Color(red: 0.60, green: 0.42, blue: 0.42),  // darker rose
+                Color(red: 0.35, green: 0.53, blue: 0.60),  // darker teal
+            ]
+        } else {
+            return [
+                Color(red: 0.43, green: 0.60, blue: 0.76),  // #6e98c2
+                Color(red: 0.54, green: 0.73, blue: 0.63),  // #8abba2
+                Color(red: 0.76, green: 0.68, blue: 0.58),  // #c2ad95
+                Color(red: 0.60, green: 0.53, blue: 0.76),  // #9888c2
+                Color(red: 0.76, green: 0.58, blue: 0.58),  // #c29595
+                Color(red: 0.50, green: 0.69, blue: 0.76),  // #7fb0c2
+            ]
+        }
+    }
+    
+    private var periods: [(year: Int, month: Int, day: Int)] {
+        let grouped = Dictionary(grouping: allBalances) { "\($0.year)-\($0.month)" }
+        return grouped.keys.compactMap { key in
+            guard let balance = grouped[key]?.first else { return nil }
+            return (balance.year, balance.month, balance.day)
+        }.sorted { a, b in
+            if a.year != b.year { return a.year < b.year }
+            return a.month < b.month
+        }
+    }
+    
+    private var selectedPeriod: (year: Int, month: Int, day: Int)? {
+        guard !periods.isEmpty else { return nil }
+        let index = currentPeriodIndex ?? (periods.count - 1)
+        guard index >= 0 && index < periods.count else { return nil }
+        return periods[index]
+    }
+    
+    private var currentTotal: Double {
+        guard let period = selectedPeriod else { return 0 }
+        return allBalances
+            .filter { $0.year == period.year && $0.month == period.month }
+            .reduce(0) { $0 + $1.amount }
+    }
+    
+    private var latestBalances: [(name: String, amount: Double)] {
+        guard let period = selectedPeriod else { return [] }
+        return categories.compactMap { category in
+            guard let balance = category.balances.first(where: {
+                $0.year == period.year && $0.month == period.month
+            }) else { return nil }
+            return (name: category.name, amount: balance.amount)
+        }.sorted { $0.amount < $1.amount }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 16) {
+                    // App title
+                    HStack(spacing: 8) {
+                        HStack(alignment: .bottom, spacing: 2) {
+                            ForEach(0..<3, id: \.self) { index in
+                                RoundedRectangle(cornerRadius: 1.5)
+                                    .fill([
+                                        Color(red: 0.43, green: 0.60, blue: 0.76),
+                                        Color(red: 0.54, green: 0.73, blue: 0.63),
+                                        Color(red: 0.76, green: 0.68, blue: 0.58),
+                                    ][index])
+                                    .frame(width: 4, height: titleIconAnimating ? [4, 8, 14.4][index] : 0)
+                            }
+                        }
+                        .frame(width: 16, height: 16)
+                        
+                        Text("Fundra")
+                            .font(.system(size: 28, weight: .bold))
+                            .italic()
+                            .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
+                            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 4)
+                    .onAppear {
+                        titleIconAnimating = true
+                    }
+                    .onTapGesture {
+                        titleTapCount += 1
+                        withAnimation(.easeOut(duration: 0.1)) {
+                            titleIconAnimating = false
+                            chartAnimating = false
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                                titleIconAnimating = true
+                            }
+                            withAnimation(.easeOut(duration: 0.6)) {
+                                chartAnimating = true
+                            }
+                        }
+                        if titleTapCount % 3 == 0 {
+                            showConfetti = true
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                                showConfetti = false
+                            }
+                        }
+                    }
+                    
+                    // Total header
+                    headerView
+                        .padding(.top, 8)
+                    
+                    // Chart
+                    chartView
+                    
+                    // Export & Share actions
+                    HStack(spacing: 20) {
+                        ShareLink(item: exportCSVData(), preview: SharePreview(exportFileName, image: exportPreviewImage)) {
+                            HStack(spacing: 7) {
+                                MiniBarChartIcon()
+                                Text("Export")
+                            }
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        }
+                        
+                        if let chartURL = chartImageURL, let chartImage = renderedChartImage {
+                            ShareLink(item: chartURL, preview: SharePreview("Fundra Chart", image: chartImage)) {
+                                HStack(spacing: 7) {
+                                    MiniBarChartIcon()
+                                    Text("Save Chart")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            }
+                        } else {
+                            Button(action: {}) {
+                                HStack(spacing: 7) {
+                                    MiniBarChartIcon(opacity: 0.5)
+                                    Text("Save Chart")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary.opacity(0.5))
+                            }
+                            .disabled(true)
+                        }
+                    }
+                    .padding(.top, 8)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.gray.opacity(0.08))
+                    )
+                    
+                    // Separator
+                    Divider()
+                        .padding(.top, 1)
+                        .padding(.bottom, 2)
+                    
+                    // Account list
+                    accountListView
+                    
+                    // Quote
+                    QuoteView()
+                        .padding(.top, -4)
+                }
+                .padding(.bottom, 16)
+            }
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: { showRecordMonth = true }) {
+                        Text("Record")
+                            .foregroundColor(colorScheme == .dark ? Color(white: 0.85) : .white)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(moneyGreen)
+                    .controlSize(.mini)
+                }
+            }
+            .background(colorScheme == .dark ? Color(red: 0.11, green: 0.11, blue: 0.12) : Color(UIColor.systemBackground))
+            .sheet(isPresented: $showRecordMonth) {
+                RecordMonthView()
+            }
+            .sheet(isPresented: $showGrowthSummary) {
+                GrowthSummaryView(selectedPeriod: selectedPeriod, allBalances: allBalances, periods: periods)
+            }
+            .sheet(item: $editingBalance) { balance in
+                EditBalanceView(balance: balance)
+            }
+            .sheet(item: $editingCategory) { category in
+                ManageCategoryView(category: category)
+            }
+            .sheet(isPresented: $showAddCategory) {
+                AddAccountView(selectedPeriod: selectedPeriod)
+            }
+            .alert("Delete Month?", isPresented: $showDeleteMonth) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    guard let period = selectedPeriod else { return }
+                    let toDelete = allBalances.filter { $0.year == period.year && $0.month == period.month }
+                    
+                    // save for undo
+                    undoData = toDelete.compactMap { balance in
+                        guard let category = balance.category else { return nil }
+                        return (categoryId: category.persistentModelID, year: balance.year, month: balance.month, day: balance.day, amount: balance.amount)
+                    }
+                    
+                    for balance in toDelete {
+                        modelContext.delete(balance)
+                    }
+                    try? modelContext.save()
+                    
+                    if let idx = currentPeriodIndex, idx > 0 {
+                        currentPeriodIndex = idx - 1
+                    } else {
+                        currentPeriodIndex = nil
+                    }
+                    
+                    // show undo toast
+                    showUndoToast = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                        if showUndoToast {
+                            showUndoToast = false
+                            undoData = []
+                        }
+                    }
+                }
+            } message: {
+                if let period = selectedPeriod {
+                    let date = Calendar.current.date(from: DateComponents(year: period.year, month: period.month)) ?? Date()
+                    Text("This will remove all balances for \(date.formatted(.dateTime.month(.wide).year())).")
+                } else {
+                    Text("This will remove all balances for this month.")
+                }
+            }
+            .alert("Delete Account?", isPresented: Binding(
+                get: { deletingCategory != nil },
+                set: { if !$0 { deletingCategory = nil } }
+            )) {
+                Button("Cancel", role: .cancel) { deletingCategory = nil }
+                Button("Delete", role: .destructive) {
+                    if let category = deletingCategory {
+                        modelContext.delete(category)
+                        try? modelContext.save()
+                    }
+                    deletingCategory = nil
+                }
+            } message: {
+                if categories.count == 1 {
+                    Text("This is your last account. Deleting it will reset the app to setup.")
+                } else {
+                    Text("This will delete '\(deletingCategory?.name ?? "")' and all its balances.")
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if showUndoToast {
+                    HStack {
+                        Text("Month deleted")
+                            .foregroundColor(.white)
+                        Spacer()
+                        Button("Undo") {
+                            // restore balances
+                            for item in undoData {
+                                if let category = modelContext.model(for: item.categoryId) as? Category {
+                                    let balance = Balance(category: category, year: item.year, month: item.month, day: item.day, amount: item.amount)
+                                    modelContext.insert(balance)
+                                }
+                            }
+                            try? modelContext.save()
+                            undoData = []
+                            showUndoToast = false
+                            currentPeriodIndex = periods.count - 1
+                        }
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+                    }
+                    .padding()
+                    .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.easeInOut, value: showUndoToast)
+                }
+            }
+            .overlay {
+                if showConfetti {
+                    ConfettiView()
+                        .allowsHitTesting(false)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Header
+    
+    private var activeIndex: Int {
+        currentPeriodIndex ?? (periods.count - 1)
+    }
+    
+    private var headerView: some View {
+        VStack(spacing: 4) {
+            if currentTotal > 0 {
+                Text(formatFullAmount(displayedTotal))
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundColor(moneyGreen)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.6), value: displayedTotal)
+            }
+            
+            // Month navigation
+            HStack(spacing: 16) {
+                Button(action: {
+                    if activeIndex > 0 {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            currentPeriodIndex = activeIndex - 1
+                        }
+                    }
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(activeIndex > 0 ? .blue : .gray.opacity(0.3))
+                }
+                .disabled(activeIndex <= 0)
+                
+                if let period = selectedPeriod {
+                    let date = Calendar.current.date(from: DateComponents(year: period.year, month: period.month, day: period.day)) ?? Date()
+                    Text(date, format: .dateTime.month(.wide).day().year())
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .contentTransition(.numericText())
+                        .onLongPressGesture {
+                            showDeleteMonth = true
+                        }
+                }
+                
+                Button(action: {
+                    if activeIndex < periods.count - 1 {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            currentPeriodIndex = activeIndex + 1
+                        }
+                    }
+                }) {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(activeIndex < periods.count - 1 ? .blue : .gray.opacity(0.3))
+                }
+                .disabled(activeIndex >= periods.count - 1)
+            }
+        }
+        .padding(.top, 8)
+        .onAppear {
+            if currentPeriodIndex == nil {
+                currentPeriodIndex = periods.count - 1
+            }
+            displayedTotal = currentTotal
+            triggerChartAnimation()
+        }
+        .onChange(of: periods.count) {
+            currentPeriodIndex = periods.count - 1
+        }
+        .onChange(of: currentPeriodIndex) {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                displayedTotal = currentTotal
+            }
+            triggerChartAnimation()
+        }
+        .onChange(of: allBalances.count) {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                displayedTotal = currentTotal
+            }
+        }
+        .onChange(of: currentTotal) {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                displayedTotal = currentTotal
+            }
+        }
+    }
+    
+    // MARK: - Chart
+    
+    @State private var selectedAccountName: String? = nil
+    
+    private var chartView: some View {
+        Group {
+            if !latestBalances.isEmpty {
+                Chart {
+                    ForEach(Array(latestBalances.enumerated()), id: \.element.name) { index, item in
+                        BarMark(
+                            x: .value("Account", item.name),
+                            y: .value("Balance", chartAnimating ? item.amount : 0)
+                        )
+                        .foregroundStyle(chartColors[index % chartColors.count])
+                        .cornerRadius(6)
+                        .annotation(position: .top) {
+                            Text(abbreviatedAmount(item.amount))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .opacity(chartAnimating ? 1 : 0)
+                        }
+                    }
+                }
+                .chartXSelection(value: $selectedAccountName)
+                .onChange(of: selectedAccountName) { _, newValue in
+                    guard let name = newValue,
+                          let period = selectedPeriod,
+                          let category = categories.first(where: { $0.name == name }),
+                          let balance = category.balances.first(where: { $0.year == period.year && $0.month == period.month })
+                    else { return }
+                    editingBalance = balance
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        selectedAccountName = nil
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks { _ in
+                        AxisValueLabel()
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading) { value in
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
+                            .foregroundStyle(Color.gray.opacity(0.4))
+                        AxisValueLabel {
+                            if let amount = value.as(Double.self) {
+                                Text(abbreviatedAmount(amount))
+                                    .font(.caption)
+                            }
+                        }
+                    }
+                }
+                .chartYScale(domain: 0...(latestBalances.map(\.amount).max() ?? 1))
+                .frame(maxWidth: latestBalances.count == 1 ? 200 : .infinity, alignment: .center)
+                .frame(height: 230)
+                .padding(.horizontal)
+                .padding(.top, 30)
+                .padding(.bottom, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.20))
+                        .padding(.horizontal, 8)
+                )
+                .id(currentPeriodIndex)
+                .transition(.opacity.combined(with: .slide))
+            } else if allBalances.isEmpty {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(height: 200)
+                    .overlay(
+                        Text("Record your first month to see the chart")
+                            .foregroundColor(.secondary)
+                    )
+                    .padding(.horizontal)
+            }
+        }
+    }
+    
+    // MARK: - Account List
+    
+    private var accountListView: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Accounts")
+                    .font(.system(size: 19, weight: .bold))
+                    .foregroundColor(colorScheme == .dark ? Color(white: 0.75) : .primary)
+                Spacer()
+                Button {
+                    showGrowthSummary = true
+                } label: {
+                    HStack(spacing: 5) {
+                        MiniLineChartIcon()
+                        Text("Growth")
+                    }
+                }
+                .font(.system(size: 19, weight: .bold))
+                .foregroundColor(colorScheme == .dark ? Color(red: 0.43, green: 0.60, blue: 0.76) : Color(red: 0.30, green: 0.45, blue: 0.60))
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+            
+            let sortedCategories = categoriesSortedByBalance
+            ForEach(sortedCategories, id: \.id) { category in
+                let balance = latestBalance(for: category)
+                HStack {
+                    Text(category.name)
+                        .font(.body)
+                        .foregroundColor(Color(white: 0.35))
+                    Spacer()
+                    if let balance = balance {
+                        Text({
+                            let formatter = NumberFormatter()
+                            formatter.numberStyle = .currency
+                            formatter.currencySymbol = "$"
+                            formatter.minimumFractionDigits = 2
+                            formatter.maximumFractionDigits = 2
+                            return formatter.string(from: NSNumber(value: balance.amount)) ?? "$\(balance.amount)"
+                        }())
+                            .font(.body)
+                            .fontWeight(.semibold)
+                            .foregroundColor(moneyGreen)
+                    } else {
+                        Text("—")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if let balance = balance {
+                        editingBalance = balance
+                    } else {
+                        showRecordMonth = true
+                    }
+                }
+                .contextMenu {
+                    Button {
+                        editingCategory = category
+                    } label: {
+                        Label("Rename", systemImage: "pencil")
+                    }
+                    if let balance = balance {
+                        Button {
+                            editingBalance = balance
+                        } label: {
+                            Label("Edit Balance", systemImage: "dollarsign.circle")
+                        }
+                    }
+                    Button(role: .destructive) {
+                        deletingCategory = category
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+                
+                Divider()
+                    .padding(.horizontal)
+            }
+            
+            // Add category button
+            if !hasSeenLongPressTip {
+                Text("Tip: Long-press an account to rename or delete it.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+                    .padding(.top, 12)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                            withAnimation {
+                                hasSeenLongPressTip = true
+                            }
+                        }
+                    }
+            }
+            
+            Button(action: { showAddCategory = true }) {
+                HStack {
+                    Image(systemName: "plus.circle")
+                    Text("Add Account")
+                }
+                .font(.callout)
+                .foregroundColor(colorScheme == .dark ? Color(red: 0.43, green: 0.60, blue: 0.76) : Color(red: 0.30, green: 0.45, blue: 0.60))
+            }
+            .padding(.horizontal)
+            .padding(.top, 16)
+            .padding(.bottom, 6)
+        }
+        .padding(.top, -1)
+    }
+    
+    private var categoriesSortedByBalance: [Category] {
+        categories.sorted { cat1, cat2 in
+            let bal1 = latestBalance(for: cat1)?.amount ?? 0
+            let bal2 = latestBalance(for: cat2)?.amount ?? 0
+            return bal1 < bal2
+        }
+    }
+    
+    private func latestBalance(for category: Category) -> Balance? {
+        guard let period = selectedPeriod else { return nil }
+        return category.balances.first {
+            $0.year == period.year && $0.month == period.month
+        }
+    }
+    
+    private func triggerChartAnimation() {
+        chartAnimating = false
+        withAnimation(.easeOut(duration: 0.6)) {
+            chartAnimating = true
+        }
+    }
+    
+    // MARK: - Export & Share
+    
+    private var exportPreviewImage: Image {
+        let barHeights: [CGFloat] = [20, 40, 72]
+        let view = HStack(alignment: .bottom, spacing: 6) {
+            ForEach(0..<3, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(chartColors[index])
+                    .frame(width: 20, height: barHeights[index])
+            }
+        }
+        .padding(20)
+        .background(Color.white)
+        .frame(width: 100, height: 100)
+        
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 3.0
+        if let uiImage = renderer.uiImage {
+            return Image(uiImage: uiImage)
+        }
+        return Image(systemName: "doc.text")
+    }
+    
+    private var exportFileName: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return "Fundra_\(formatter.string(from: Date())).csv"
+    }
+    
+    private func exportCSVData() -> URL {
+        var csv = "Account,Date,Amount\n"
+        for period in periods {
+            let date = Calendar.current.date(from: DateComponents(year: period.year, month: period.month, day: period.day)) ?? Date()
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "MMM d, yyyy"
+            let dateString = dateFormatter.string(from: date)
+            
+            for category in categories {
+                if let balance = category.balances.first(where: { $0.year == period.year && $0.month == period.month }) {
+                    csv += "\(category.name),\(dateString),\(String(format: "%.2f", balance.amount))\n"
+                }
+            }
+        }
+        
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(exportFileName)
+        try? csv.write(to: tempURL, atomically: true, encoding: .utf8)
+        return tempURL
+    }
+    
+    private var renderedChartImage: Image? {
+        guard !latestBalances.isEmpty else { return nil }
+        let renderer = ImageRenderer(content: chartForExport)
+        renderer.scale = 3.0
+        guard let uiImage = renderer.uiImage else { return nil }
+        return Image(uiImage: uiImage)
+    }
+    
+    private var chartImageURL: URL? {
+        guard !latestBalances.isEmpty else { return nil }
+        let renderer = ImageRenderer(content: chartForExport)
+        renderer.scale = 3.0
+        guard let uiImage = renderer.uiImage,
+              let data = uiImage.pngData() else { return nil }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("FundraChart.png")
+        try? data.write(to: url)
+        return url
+    }
+    
+    @ViewBuilder
+    private var chartForExport: some View {
+        VStack(spacing: 4) {
+            // Total
+            if currentTotal > 0 {
+                Text(formatFullAmount(currentTotal))
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundColor(moneyGreen)
+            }
+            
+            // Date
+            if let period = selectedPeriod {
+                let date = Calendar.current.date(from: DateComponents(year: period.year, month: period.month, day: period.day)) ?? Date()
+                Text(date, format: .dateTime.month(.wide).day().year())
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            // Chart with annotations
+            Chart {
+                ForEach(Array(latestBalances.enumerated()), id: \.element.name) { index, item in
+                    BarMark(
+                        x: .value("Account", item.name),
+                        y: .value("Balance", item.amount)
+                    )
+                    .foregroundStyle(chartColors[index % chartColors.count])
+                    .cornerRadius(6)
+                    .annotation(position: .top) {
+                        Text(abbreviatedAmount(item.amount))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .chartXAxis {
+                AxisMarks { _ in
+                    AxisValueLabel()
+                        .font(.caption.weight(.semibold))
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading) { value in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
+                        .foregroundStyle(Color.gray.opacity(0.4))
+                    AxisValueLabel {
+                        if let amount = value.as(Double.self) {
+                            Text(abbreviatedAmount(amount))
+                                .font(.caption)
+                        }
+                    }
+                }
+            }
+            .frame(width: 400, height: 242)
+        }
+        .padding()
+        .background(Color(UIColor.systemBackground))
+    }
+}
+
+// MARK: - Record Month
+
+struct RecordMonthView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \Category.sortOrder) private var categories: [Category]
+    
+    @State private var selectedDate = Date()
+    @State private var amounts: [String] = []
+    @State private var placeholders: [String] = []
+    @State private var isReady = false
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Date") {
+                    DatePicker("Record date", selection: $selectedDate, displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .padding(.leading, 4)
+                    Text("One entry per month. Recording again will update that month.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                if isReady {
+                    Section("Balances") {
+                        ForEach(0..<categories.count, id: \.self) { index in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(categories[index].name)
+                                    .font(.system(size: 16, weight: .regular))
+                                    .foregroundColor(.secondary)
+                                HStack {
+                                    Text("$")
+                                        .font(.title3)
+                                        .foregroundColor(.secondary)
+                                    TextField(placeholders.indices.contains(index) ? placeholders[index] : "0.00", text: $amounts[index])
+                                        .font(.title3)
+                                        .onChange(of: amounts[index]) { _, newValue in
+                                            let filtered = filterAmountInput(newValue)
+                                            if filtered != newValue { amounts[index] = filtered }
+                                        }
+                                        #if os(iOS)
+                                        .keyboardType(.decimalPad)
+                                        #endif
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("")
+            
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 6) {
+                        MiniBarChartIcon()
+                        Text("Record")
+                            .font(.headline)
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { save() }
+                        .fontWeight(.bold)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(red: 0.30, green: 0.45, blue: 0.60))
+                        .controlSize(.small)
+                        .disabled({
+                            let allValid = amounts.allSatisfy {
+                                let raw = $0.replacingOccurrences(of: ",", with: "")
+                                guard let amount = Double(raw), amount >= 0 else { return false }
+                                return true
+                            }
+                            let hasNonZero = amounts.contains {
+                                let raw = $0.replacingOccurrences(of: ",", with: "")
+                                guard let amount = Double(raw), amount > 0 else { return false }
+                                return true
+                            }
+                            return !allValid || !hasNonZero
+                        }())
+                }
+            }
+            .onAppear {
+                amounts = Array(repeating: "", count: categories.count)
+                placeholders = Array(repeating: "0.00", count: categories.count)
+                isReady = true
+                prefillAmounts()
+            }
+            .onChange(of: selectedDate) {
+                prefillAmounts()
+            }
+        }
+    }
+    
+    private func prefillAmounts() {
+        let components = Calendar.current.dateComponents([.year, .month], from: selectedDate)
+        let year = components.year!
+        let month = components.month!
+        
+        for (index, category) in categories.enumerated() {
+            if let existing = category.balances.first(where: { $0.year == year && $0.month == month }) {
+                let formatter = NumberFormatter()
+                formatter.numberStyle = .decimal
+                formatter.groupingSeparator = ","
+                if existing.amount.truncatingRemainder(dividingBy: 1) == 0 {
+                    formatter.maximumFractionDigits = 0
+                } else {
+                    formatter.maximumFractionDigits = 2
+                    formatter.minimumFractionDigits = 2
+                }
+                amounts[index] = formatter.string(from: NSNumber(value: existing.amount)) ?? String(format: "%.2f", existing.amount)
+            } else {
+                amounts[index] = ""
+            }
+            
+            // Set placeholder from most recent previous balance
+            let previousBalance = category.balances
+                .filter { $0.year < year || ($0.year == year && $0.month < month) }
+                .sorted { a, b in
+                    if a.year != b.year { return a.year > b.year }
+                    return a.month > b.month
+                }
+                .first
+            
+            if let prev = previousBalance {
+                let formatter = NumberFormatter()
+                formatter.numberStyle = .decimal
+                formatter.groupingSeparator = ","
+                if prev.amount.truncatingRemainder(dividingBy: 1) == 0 {
+                    formatter.maximumFractionDigits = 0
+                } else {
+                    formatter.maximumFractionDigits = 2
+                    formatter.minimumFractionDigits = 2
+                }
+                placeholders[index] = formatter.string(from: NSNumber(value: prev.amount)) ?? "0.00"
+            } else {
+                placeholders[index] = "0.00"
+            }
+        }
+    }
+    
+    private func save() {
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: selectedDate)
+        let year = components.year!
+        let month = components.month!
+        let day = components.day!
+        
+        for (index, category) in categories.enumerated() {
+            let raw = amounts[index].replacingOccurrences(of: ",", with: "")
+            guard let amount = Double(raw), amount >= 0 else { continue }
+            
+            // check if balance already exists for this category/month
+            let categoryID = category.persistentModelID
+            let descriptor = FetchDescriptor<Balance>(predicate: #Predicate { balance in
+                balance.year == year && balance.month == month && balance.category?.persistentModelID == categoryID
+            })
+            
+            if let existing = try? modelContext.fetch(descriptor).first {
+                existing.amount = amount
+                existing.day = day
+                existing.updatedAt = Date()
+            } else {
+                let balance = Balance(category: category, year: year, month: month, day: day, amount: amount)
+                modelContext.insert(balance)
+            }
+        }
+        
+        try? modelContext.save()
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        dismiss()
+    }
+}
+
+// MARK: - Growth Summary
+
+struct GrowthSummaryView: View {
+    @Environment(\.dismiss) private var dismiss
+    let selectedPeriod: (year: Int, month: Int, day: Int)?
+    let allBalances: [Balance]
+    let periods: [(year: Int, month: Int, day: Int)]
+    
+    private func total(year: Int, month: Int) -> Double {
+        allBalances
+            .filter { $0.year == year && $0.month == month }
+            .reduce(0) { $0 + $1.amount }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                if periods.count < 2 {
+                    Text("Record another month to see growth.")
+                        .foregroundColor(.secondary)
+                        .padding()
+                } else if let selected = selectedPeriod {
+                    let first = periods.first!
+                    
+                    if selected.year == first.year && selected.month == first.month {
+                        Text("Close and swipe to a later month to see growth.")
+                            .foregroundColor(.secondary)
+                            .padding()
+                    } else {
+                    let firstTotal = total(year: first.year, month: first.month)
+                    let selectedTotal = total(year: selected.year, month: selected.month)
+                    let change = selectedTotal - firstTotal
+                    let pct = firstTotal > 0 ? (change / firstTotal) * 100 : 0
+                    
+                    // find prior month
+                    let selectedIndex = periods.firstIndex(where: { $0.year == selected.year && $0.month == selected.month }) ?? 0
+                    let priorPeriod = selectedIndex > 0 ? periods[selectedIndex - 1] : nil
+                    let priorTotal = priorPeriod != nil ? total(year: priorPeriod!.year, month: priorPeriod!.month) : nil
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        let firstDate = Calendar.current.date(from: DateComponents(year: first.year, month: first.month, day: first.day)) ?? Date()
+                        let selectedDate = Calendar.current.date(from: DateComponents(year: selected.year, month: selected.month, day: selected.day)) ?? Date()
+                        
+                        Label("First recorded (\(firstDate, format: .dateTime.month(.abbreviated).day().year()))", systemImage: "calendar")
+                            .foregroundColor(.secondary)
+                        Text(formatFullAmount(firstTotal))
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        if let priorTotal = priorTotal, let priorPeriod = priorPeriod,
+                           !(priorPeriod.year == first.year && priorPeriod.month == first.month) {
+                            let priorDate = Calendar.current.date(from: DateComponents(year: priorPeriod.year, month: priorPeriod.month, day: priorPeriod.day)) ?? Date()
+                            let monthChange = selectedTotal - priorTotal
+                            let monthPct = priorTotal > 0 ? (monthChange / priorTotal) * 100 : 0
+                            Label("Prior month (\(priorDate, format: .dateTime.month(.abbreviated).day().year()))", systemImage: "calendar")
+                                .foregroundColor(.secondary)
+                            HStack(spacing: 6) {
+                                Text(formatFullAmount(priorTotal))
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.secondary)
+                                Text("(\(monthChange >= 0 ? "+" : "-")\(formatFullAmount(abs(monthChange))), \(monthPct, specifier: "%.1f")%)")
+                                    .font(.caption)
+                                    .foregroundColor(monthChange >= 0 ? moneyGreen : .red)
+                            }
+                        }
+                        
+                        Label("Current month (\(selectedDate, format: .dateTime.month(.abbreviated).day().year()))", systemImage: "calendar")
+                            .foregroundColor(.secondary)
+                        Text(formatFullAmount(selectedTotal))
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Divider()
+                        
+                        HStack {
+                            Text("Growth (since \(firstDate, format: .dateTime.month(.abbreviated).day().year())):")
+                                .foregroundColor(.secondary)
+                                .font(.subheadline)
+                        }
+                        HStack {
+                            Text("\(change >= 0 ? "+" : "-")\(formatFullAmount(abs(change))) (\(pct, specifier: "%.1f")%)")
+                                .fontWeight(.bold)
+                                .foregroundColor(change >= 0 ? moneyGreen : .red)
+                        }
+                        .font(.title3)
+                    }
+                    .padding()
+                    
+                    // Line chart showing total over time
+                    Chart {
+                        ForEach(Array(periods.enumerated()), id: \.offset) { _, period in
+                            let periodTotal = total(year: period.year, month: period.month)
+                            let date = Calendar.current.date(from: DateComponents(year: period.year, month: period.month, day: period.day)) ?? Date()
+                            LineMark(
+                                x: .value("Month", date),
+                                y: .value("Total", periodTotal)
+                            )
+                            .foregroundStyle(moneyGreen)
+                            .interpolationMethod(.catmullRom)
+                            
+                            AreaMark(
+                                x: .value("Month", date),
+                                y: .value("Total", periodTotal)
+                            )
+                            .foregroundStyle(moneyGreen.opacity(0.1))
+                            .interpolationMethod(.catmullRom)
+                            
+                            PointMark(
+                                x: .value("Month", date),
+                                y: .value("Total", periodTotal)
+                            )
+                            .foregroundStyle(moneyGreen)
+                            .symbolSize(30)
+                        }
+                    }
+                    .chartXAxis {
+                        AxisMarks(values: .automatic) { _ in
+                            AxisValueLabel(format: .dateTime.month(.abbreviated))
+                                .font(.caption)
+                        }
+                    }
+                    .chartYAxis {
+                        AxisMarks(position: .leading) { value in
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
+                                .foregroundStyle(Color.gray.opacity(0.4))
+                            AxisValueLabel {
+                                if let amount = value.as(Double.self) {
+                                    Text(abbreviatedAmount(amount))
+                                        .font(.caption)
+                                }
+                            }
+                        }
+                    }
+                    .frame(height: 200)
+                    .padding(.horizontal)
+                    }
+                }
+                
+                Spacer()
+            }
+            .navigationTitle("")
+            
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 6) {
+                        MiniBarChartIcon()
+                        Text("Growth Summary")
+                            .font(.headline)
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Edit Balance
+
+struct EditBalanceView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var balance: Balance
+    @State private var amountText: String = ""
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(balance.category?.name ?? "Amount") {
+                    HStack {
+                        Text("$")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                        TextField("0.00", text: $amountText)
+                            .font(.title3)
+                            .onChange(of: amountText) { _, newValue in
+                                let filtered = filterAmountInput(newValue)
+                                if filtered != newValue { amountText = filtered }
+                            }
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                    }
+                }
+                
+                if let updatedAt = balance.updatedAt {
+                    Section {
+                        Text("Last edited: \(updatedAt, format: .dateTime.month(.abbreviated).day().year().hour().minute())")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 6) {
+                        MiniBarChartIcon()
+                        Text("Edit Balance")
+                            .font(.headline)
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        let raw = amountText.replacingOccurrences(of: ",", with: "")
+                        if let amount = Double(raw), amount >= 0 {
+                            balance.amount = amount
+                            balance.updatedAt = Date()
+                        }
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(red: 0.30, green: 0.45, blue: 0.60))
+                    .controlSize(.small)
+                    .disabled({
+                        let raw = amountText.replacingOccurrences(of: ",", with: "")
+                        guard let amount = Double(raw), amount >= 0 else { return true }
+                        return false
+                    }())
+                }
+            }
+            .onAppear {
+                let formatter = NumberFormatter()
+                formatter.numberStyle = .decimal
+                formatter.groupingSeparator = ","
+                if balance.amount.truncatingRemainder(dividingBy: 1) == 0 {
+                    formatter.maximumFractionDigits = 0
+                } else {
+                    formatter.maximumFractionDigits = 2
+                    formatter.minimumFractionDigits = 2
+                }
+                amountText = formatter.string(from: NSNumber(value: balance.amount)) ?? String(format: "%.2f", balance.amount)
+            }
+        }
+    }
+}
+
+// MARK: - Manage Category
+
+struct ManageCategoryView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \Category.sortOrder) private var categories: [Category]
+    var category: Category
+    @State private var newName: String = ""
+    
+    private var isDuplicateName: Bool {
+        let trimmed = newName.trimmingCharacters(in: .whitespaces).lowercased()
+        return categories.contains { $0.id != category.id && $0.name.lowercased() == trimmed }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Rename") {
+                    TextField("Account name", text: $newName)
+                        .autocorrectionDisabled()
+                        .onChange(of: newName) { _, newValue in
+                            if newValue.count > 15 { newName = String(newValue.prefix(15)) }
+                        }
+                }
+            }
+            .navigationTitle("")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 6) {
+                        MiniBarChartIcon()
+                        Text("Account")
+                            .font(.headline)
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        let name = newName.trimmingCharacters(in: .whitespaces)
+                        if !name.isEmpty {
+                            category.name = name
+                        }
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(red: 0.30, green: 0.45, blue: 0.60))
+                    .controlSize(.small)
+                    .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty || isDuplicateName)
+                }
+            }
+            .onAppear {
+                newName = category.name
+            }
+        }
+    }
+}
+
+// MARK: - Mini Bar Chart Icon
+
+struct MiniBarChartIcon: View {
+    var opacity: Double = 1.0
+    
+    private let barColors: [Color] = [
+        Color(red: 0.43, green: 0.60, blue: 0.76),  // #6e98c2
+        Color(red: 0.54, green: 0.73, blue: 0.63),  // #8abba2
+        Color(red: 0.76, green: 0.68, blue: 0.58),  // #c2ad95
+    ]
+    
+    private let barHeights: [CGFloat] = [4, 8, 14.4]
+    
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 2) {
+            ForEach(0..<3, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 1.5)
+                    .fill(barColors[index].opacity(opacity))
+                    .frame(width: 4, height: barHeights[index])
+            }
+        }
+        .frame(width: 16, height: 16)
+    }
+}
+
+// MARK: - Mini Line Chart Icon
+
+struct MiniLineChartIcon: View {
+    var body: some View {
+        Path { path in
+            path.move(to: CGPoint(x: 1, y: 13))
+            path.addLine(to: CGPoint(x: 5, y: 9))
+            path.addLine(to: CGPoint(x: 9, y: 11))
+            path.addLine(to: CGPoint(x: 15, y: 3))
+        }
+        .stroke(moneyGreen, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+        .frame(width: 16, height: 16)
+    }
+}
+
+// MARK: - Add Account
+
+struct AddAccountView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \Category.sortOrder) private var categories: [Category]
+    let selectedPeriod: (year: Int, month: Int, day: Int)?
+    
+    @State private var accountName = ""
+    @State private var balanceText = ""
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Account Name") {
+                    TextField("Account name", text: $accountName)
+                        .font(.title3)
+                        .autocorrectionDisabled()
+                        .onChange(of: accountName) { _, newValue in
+                            if newValue.count > 15 { accountName = String(newValue.prefix(15)) }
+                        }
+                }
+                
+                Section("Initial Balance") {
+                    HStack {
+                        Text("$")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                        TextField("0.00", text: $balanceText)
+                            .font(.title3)
+                            .onChange(of: balanceText) { _, newValue in
+                                let filtered = filterAmountInput(newValue)
+                                if filtered != newValue { balanceText = filtered }
+                            }
+                            #if os(iOS)
+                            .keyboardType(.decimalPad)
+                            #endif
+                    }
+                }
+            }
+            .navigationTitle("")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 6) {
+                        MiniBarChartIcon()
+                        Text("Add Account")
+                            .font(.headline)
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") { save() }
+                        .fontWeight(.bold)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(red: 0.30, green: 0.45, blue: 0.60))
+                        .controlSize(.small)
+                        .disabled(accountName.trimmingCharacters(in: .whitespaces).isEmpty || isDuplicateName || {
+                            let raw = balanceText.replacingOccurrences(of: ",", with: "")
+                            guard let amount = Double(raw), amount > 0 else { return true }
+                            return false
+                        }())
+                }
+            }
+        }
+    }
+    
+    private var isDuplicateName: Bool {
+        let trimmed = accountName.trimmingCharacters(in: .whitespaces).lowercased()
+        return categories.contains { $0.name.lowercased() == trimmed }
+    }
+    
+    private func save() {
+        let name = accountName.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        let maxOrder = (categories.map(\.sortOrder).max() ?? 0) + 1
+        let category = Category(name: name, sortOrder: maxOrder)
+        modelContext.insert(category)
+        
+        if let period = selectedPeriod {
+            let raw = balanceText.replacingOccurrences(of: ",", with: "")
+            if let amount = Double(raw), amount >= 0 {
+                let balance = Balance(category: category, year: period.year, month: period.month, day: period.day, amount: amount)
+                modelContext.insert(balance)
+            }
+        }
+        
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        dismiss()
+    }
+}
+
+// MARK: - Confetti View
+
+struct ConfettiView: View {
+    @State private var particles: [(id: Int, x: CGFloat, y: CGFloat, color: Color, rotation: Double, size: CGFloat)] = []
+    
+    private let colors: [Color] = [
+        Color(red: 0.43, green: 0.60, blue: 0.76),
+        Color(red: 0.54, green: 0.73, blue: 0.63),
+        Color(red: 0.76, green: 0.68, blue: 0.58),
+        Color(red: 0.60, green: 0.53, blue: 0.76),
+        Color(red: 0.76, green: 0.58, blue: 0.58),
+        Color(red: 0.22, green: 0.48, blue: 0.34),
+    ]
+    
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                ForEach(particles, id: \.id) { particle in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(particle.color)
+                        .frame(width: particle.size, height: particle.size * 0.6)
+                        .rotationEffect(.degrees(particle.rotation))
+                        .position(x: particle.x, y: particle.y)
+                }
+            }
+            .onAppear {
+                createParticles(in: geo.size)
+            }
+        }
+        .ignoresSafeArea()
+    }
+    
+    private func createParticles(in size: CGSize) {
+        for i in 0..<40 {
+            let startX = CGFloat.random(in: 0...size.width)
+            let startY: CGFloat = -20
+            let color = colors.randomElement()!
+            let rotation = Double.random(in: 0...360)
+            let particleSize = CGFloat.random(in: 6...12)
+            
+            particles.append((id: i, x: startX, y: startY, color: color, rotation: rotation, size: particleSize))
+            
+            let endY = size.height + 50
+            let drift = CGFloat.random(in: -60...60)
+            let delay = Double.random(in: 0...0.5)
+            
+            withAnimation(.easeIn(duration: Double.random(in: 1.5...2.5)).delay(delay)) {
+                particles[i].y = endY
+                particles[i].x = startX + drift
+                particles[i].rotation = rotation + Double.random(in: 180...720)
+            }
+        }
+    }
+}
+
+// MARK: - Speech Bubble Shape
+
+struct SpeechBubbleShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let radius: CGFloat = 16
+        let tailWidth: CGFloat = 12
+        let tailHeight: CGFloat = 10
+        let tailOffset: CGFloat = rect.width * 0.7 + 24
+        
+        var path = Path()
+        let bodyRect = CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: rect.height - tailHeight)
+        
+        // Start at top-left corner
+        path.move(to: CGPoint(x: bodyRect.minX + radius, y: bodyRect.minY))
+        
+        // Top edge
+        path.addLine(to: CGPoint(x: bodyRect.maxX - radius, y: bodyRect.minY))
+        path.addArc(center: CGPoint(x: bodyRect.maxX - radius, y: bodyRect.minY + radius), radius: radius, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+        
+        // Right edge
+        path.addLine(to: CGPoint(x: bodyRect.maxX, y: bodyRect.maxY - radius))
+        path.addArc(center: CGPoint(x: bodyRect.maxX - radius, y: bodyRect.maxY - radius), radius: radius, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+        
+        // Bottom edge with tail gap
+        path.addLine(to: CGPoint(x: tailOffset + tailWidth, y: bodyRect.maxY))
+        path.addLine(to: CGPoint(x: tailOffset + tailWidth / 2, y: rect.maxY))
+        path.addLine(to: CGPoint(x: tailOffset, y: bodyRect.maxY))
+        
+        // Continue bottom edge
+        path.addLine(to: CGPoint(x: bodyRect.minX + radius, y: bodyRect.maxY))
+        path.addArc(center: CGPoint(x: bodyRect.minX + radius, y: bodyRect.maxY - radius), radius: radius, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+        
+        // Left edge
+        path.addLine(to: CGPoint(x: bodyRect.minX, y: bodyRect.minY + radius))
+        path.addArc(center: CGPoint(x: bodyRect.minX + radius, y: bodyRect.minY + radius), radius: radius, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+        
+        path.closeSubpath()
+        
+        return path
+    }
+}
+
+// MARK: - Quote View
+
+struct QuoteView: View {
+    @State private var currentQuote: (text: String, author: String)
+    
+    private static let quotes: [(String, String)] = [
+        ("Do not save what is left after spending, but spend what is left after saving.", "— Warren Buffett"),
+        ("A penny saved is a penny earned.", "— Benjamin Franklin"),
+        ("Wealth is not about having a lot of money; it's about having a lot of options.", "— Chris Rock"),
+        ("Financial freedom is available to those who learn about it and work for it.", "— Robert Kiyosaki"),
+        ("It's not your salary that makes you rich, it's your spending habits.", "— Charles A. Jaffe"),
+        ("Save money and money will save you.", "— Jamaican Proverb"),
+        ("Compound interest is the eighth wonder of the world.", "— Albert Einstein"),
+        ("An investment in knowledge pays the best interest.", "— Benjamin Franklin"),
+        ("Never spend your money before you have earned it.", "— Thomas Jefferson"),
+        ("The more you learn, the more you earn.", "— Warren Buffett"),
+    ]
+    
+    init() {
+        let q = Self.quotes.randomElement()!
+        _currentQuote = State(initialValue: (text: q.0, author: q.1))
+    }
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("\"\(currentQuote.text)\"")
+                    .font(.footnote)
+                    .italic()
+                    .foregroundColor(.secondary)
+                
+                Text(currentQuote.author)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 4)
+            }
+            .frame(maxWidth: 260)
+            
+            Button(action: refresh) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.caption)
+                    .foregroundColor(.secondary.opacity(0.5))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: 300)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 8)
+    }
+    
+    private func refresh() {
+        let q = Self.quotes.randomElement()!
+        currentQuote = (text: q.0, author: q.1)
+    }
+}
+
+#Preview {
+    ContentView()
+        .modelContainer(for: [Category.self, Balance.self], inMemory: true)
+}
