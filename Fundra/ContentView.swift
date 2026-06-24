@@ -9,11 +9,19 @@ import SwiftUI
 import SwiftData
 import Charts
 
+// MARK: - Screenshot Mode (DEBUG only)
+#if DEBUG
+let screenshotMode = true  // Seeds data, skips Face ID, no date restriction — looks like production (for App Store screenshots)
+let debugMode = false         // Everything screenshot mode does + debug overlays (dark/light toggle, etc.)
+let useRealisticData = true  // true = 6 accounts, 1 month (June); false = 3 accounts, 3 months (growth testing)
+#endif
+
 #if canImport(UIKit)
 import UIKit
 #endif
 
 import AudioToolbox
+import UserNotifications
 
 // MARK: - Brand Colors
 
@@ -74,16 +82,154 @@ func formatFullAmount(_ amount: Double) -> String {
     return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
 }
 
+// MARK: - Monthly Reminder Notification
+
+func requestAndScheduleMonthlyReminder() {
+    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
+        guard granted else { return }
+        scheduleMonthlyReminder()
+    }
+}
+
+private func scheduleMonthlyReminder() {
+    let center = UNUserNotificationCenter.current()
+    
+    // Remove any existing reminder before scheduling
+    center.removePendingNotificationRequests(withIdentifiers: ["fundra-monthly-reminder"])
+    
+    let content = UNMutableNotificationContent()
+    content.title = "Time to record"
+    content.body = "It's a new month — update your savings totals in Fundra."
+    content.sound = .default
+    
+    // Fire on the 1st of every month at 9:00 AM
+    var dateComponents = DateComponents()
+    dateComponents.day = 1
+    dateComponents.hour = 9
+    dateComponents.minute = 0
+    
+    let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+    let request = UNNotificationRequest(identifier: "fundra-monthly-reminder", content: content, trigger: trigger)
+    
+    center.add(request)
+}
+
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \Category.sortOrder) private var categories: [Category]
+    #if DEBUG
+    @State private var debugColorScheme: ColorScheme? = nil
+    #endif
     
     var body: some View {
-        if categories.isEmpty {
-            OnboardingView()
+        Group {
+            if categories.isEmpty {
+                OnboardingView()
+            } else {
+                MainView()
+            }
+        }
+        #if DEBUG
+        .onAppear {
+            if screenshotMode || debugMode { seedScreenshotData() }
+        }
+        .preferredColorScheme((screenshotMode || debugMode) ? debugColorScheme : nil)
+        .overlay(alignment: .topLeading) {
+            if debugMode {
+                Button {
+                    if let current = debugColorScheme {
+                        debugColorScheme = current == .dark ? .light : .dark
+                    } else {
+                        debugColorScheme = colorScheme == .dark ? .light : .dark
+                    }
+                } label: {
+                    // Show destination: sun if currently dark (tap to go light), moon if currently light (tap to go dark)
+                    let effective = debugColorScheme ?? colorScheme
+                    Image(systemName: effective == .dark ? "sun.max.fill" : "moon.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(Color.black.opacity(0.5), in: Circle())
+                }
+                .padding(.leading, 12)
+                .padding(.top, 12)
+            }
+        }
+        #endif
+    }
+    
+    #if DEBUG
+    private func seedScreenshotData() {
+        // Wipe existing data and re-seed fresh every launch
+        let categoryDescriptor = FetchDescriptor<Category>()
+        let balanceDescriptor = FetchDescriptor<Balance>()
+        if let existingCategories = try? modelContext.fetch(categoryDescriptor) {
+            for cat in existingCategories { modelContext.delete(cat) }
+        }
+        if let existingBalances = try? modelContext.fetch(balanceDescriptor) {
+            for bal in existingBalances { modelContext.delete(bal) }
+        }
+        try? modelContext.save()
+        
+        if screenshotMode {
+            seedGrowthData()
+        } else if useRealisticData {
+            seedRealisticData()
         } else {
-            MainView()
+            seedGrowthData()
         }
     }
+    
+    private func seedGrowthData() {
+        let accounts = [
+            ("Emergency", [1800.0, 2100.0, 2450.0]),
+            ("Vacation",  [2400.0, 2750.0, 3120.0]),
+            ("New Car",   [7200.0, 7950.0, 8750.0]),
+            ("Savings",   [3500.0, 4100.0, 4800.0]),
+        ]
+        
+        let months = [
+            (year: 2026, month: 1, day: 15),
+            (year: 2026, month: 2, day: 15),
+            (year: 2026, month: 3, day: 15),
+        ]
+        
+        for (index, (name, amounts)) in accounts.enumerated() {
+            let category = Category(name: name, sortOrder: index)
+            modelContext.insert(category)
+            
+            for (monthIndex, amount) in amounts.enumerated() {
+                let m = months[monthIndex]
+                let balance = Balance(category: category, year: m.year, month: m.month, day: m.day, amount: amount)
+                modelContext.insert(balance)
+            }
+        }
+        
+        try? modelContext.save()
+    }
+    
+    private func seedRealisticData() {
+        let accounts: [(String, Double)] = [
+            ("Cash", 1000.0),
+            ("Apple", 1873.0),
+            ("FCCU", 7000.0),
+            ("Inspira", 7621.0),
+            ("Moomoo", 12673.0),
+            ("Forbright", 34152.0),
+        ]
+        
+        for (index, (name, amount)) in accounts.enumerated() {
+            let category = Category(name: name, sortOrder: index)
+            modelContext.insert(category)
+            
+            let balance = Balance(category: category, year: 2026, month: 6, day: 15, amount: amount)
+            modelContext.insert(balance)
+        }
+        
+        try? modelContext.save()
+    }
+    #endif
 }
 
 // MARK: - Onboarding
@@ -96,13 +242,33 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            VStack(spacing: 4) {
-                Text("Welcome to Fundra")
-                    .font(.title)
-                    .fontWeight(.bold)
-                Text("Add your savings accounts to get started")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+            VStack(spacing: 12) {
+                HStack(alignment: .bottom, spacing: 2) {
+                    ForEach(0..<3, id: \.self) { index in
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill([
+                                Color(red: 0.43, green: 0.60, blue: 0.76),
+                                Color(red: 0.54, green: 0.73, blue: 0.63),
+                                Color(red: 0.76, green: 0.68, blue: 0.58),
+                            ][index])
+                            .frame(width: 6, height: [8, 14, 22][index])
+                    }
+                }
+                
+                VStack(spacing: 4) {
+                    Text("Welcome to ")
+                        .font(.title)
+                        .fontWeight(.bold)
+                    + Text("Fundra")
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .italic()
+                        .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
+                    
+                    Text("Add your savings accounts to get started")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
             }
             .padding(.top, 60)
             .padding(.bottom, 32)
@@ -142,12 +308,14 @@ struct OnboardingView: View {
                     }
                 }
                 
-                Button("＋ Add another") {
-                    accountNames.append("")
-                    focusedField = accountNames.count - 1
+                if accountNames.count < 6 {
+                    Button("＋ Add another") {
+                        accountNames.append("")
+                        focusedField = accountNames.count - 1
+                    }
+                    .font(.callout)
+                    .padding(.top, 4)
                 }
-                .font(.callout)
-                .padding(.top, 4)
             }
             .padding(.horizontal, 32)
             
@@ -209,9 +377,12 @@ struct MainView: View {
     @State private var showAddCategory = false
     @State private var deletingCategory: Category? = nil
     @State private var showDeleteMonth = false
+    @State private var isDeletingLastMonth = false
     @State private var undoData: [(categoryId: PersistentIdentifier, year: Int, month: Int, day: Int, amount: Double)] = []
     @State private var showUndoToast = false
     @State private var chartAnimating = false
+    @State private var chartWiggleOffset: CGFloat = 0
+    @State private var chartWiggleVertical: CGFloat = 0
     @State private var displayedTotal: Double = 0
     @State private var titleIconAnimating = false
     @State private var titleTapCount = 0
@@ -324,6 +495,35 @@ struct MainView: View {
                         if titleTapCount % 3 == 0 {
                             showConfetti = true
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            // Earthquake jiggle — fixed pattern, chaotic feel
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                                let steps: [(x: CGFloat, y: CGFloat, duration: Double)] = [
+                                    ( 5, -3, 0.04),
+                                    (-6,  4, 0.05),
+                                    ( 3,  6, 0.04),
+                                    (-7, -2, 0.05),
+                                    ( 6, -5, 0.04),
+                                    (-4,  7, 0.05),
+                                    ( 7,  2, 0.04),
+                                    (-3, -6, 0.04),
+                                    ( 2,  3, 0.05),
+                                    ( 0,  0, 0.04),
+                                ]
+                                var delay = 0.0
+                                for (index, step) in steps.enumerated() {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                                        withAnimation(.linear(duration: step.duration)) {
+                                            chartWiggleOffset = step.x
+                                            chartWiggleVertical = step.y
+                                        }
+                                        if index < steps.count - 1 {
+                                            UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                                        }
+                                    }
+                                    delay += step.duration
+                                }
+                            }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                                 showConfetti = false
                             }
@@ -397,10 +597,12 @@ struct MainView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: { showRecordMonth = true }) {
                         Text("Record")
-                            .foregroundColor(colorScheme == .dark ? Color(white: 0.85) : .white)
+                            .fontWeight(.bold)
+                            .foregroundColor(colorScheme == .dark ? Color(white: 0.95) : .white)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(moneyGreen)
+                    .tint(colorScheme == .dark ? Color(red: 0.20, green: 0.45, blue: 0.32) : Color(red: 0.28, green: 0.55, blue: 0.40))
+                    .shadow(color: (colorScheme == .dark ? Color(red: 0.20, green: 0.45, blue: 0.32) : Color(red: 0.28, green: 0.55, blue: 0.40)).opacity(0.4), radius: 4, x: 0, y: 2)
                     .controlSize(.mini)
                 }
             }
@@ -420,7 +622,7 @@ struct MainView: View {
             .sheet(isPresented: $showAddCategory) {
                 AddAccountView(selectedPeriod: selectedPeriod)
             }
-            .alert("Delete Month?", isPresented: $showDeleteMonth) {
+            .alert(isDeletingLastMonth ? "⚠️ Delete Month?" : "Delete Month?", isPresented: $showDeleteMonth) {
                 Button("Cancel", role: .cancel) {}
                 Button("Delete", role: .destructive) {
                     guard let period = selectedPeriod else { return }
@@ -432,9 +634,21 @@ struct MainView: View {
                         return (categoryId: category.persistentModelID, year: balance.year, month: balance.month, day: balance.day, amount: balance.amount)
                     }
                     
+                    let isLastMonth = periods.count == 1
+                    
                     for balance in toDelete {
                         modelContext.delete(balance)
                     }
+                    
+                    // If this was the only month, reset to onboarding
+                    if isLastMonth {
+                        for category in categories {
+                            modelContext.delete(category)
+                        }
+                        try? modelContext.save()
+                        return
+                    }
+                    
                     try? modelContext.save()
                     
                     if let idx = currentPeriodIndex, idx > 0 {
@@ -453,7 +667,9 @@ struct MainView: View {
                     }
                 }
             } message: {
-                if let period = selectedPeriod {
+                if isDeletingLastMonth {
+                    Text("This is your last month. Deleting it will reset the app to setup.")
+                } else if let period = selectedPeriod {
                     let date = Calendar.current.date(from: DateComponents(year: period.year, month: period.month)) ?? Date()
                     Text("This will remove all balances for \(date.formatted(.dateTime.month(.wide).year())).")
                 } else {
@@ -556,6 +772,8 @@ struct MainView: View {
                         .foregroundColor(.secondary)
                         .contentTransition(.numericText())
                         .onLongPressGesture {
+                            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                            isDeletingLastMonth = periods.count == 1
                             showDeleteMonth = true
                         }
                 }
@@ -639,9 +857,20 @@ struct MainView: View {
                     }
                 }
                 .chartXAxis {
-                    AxisMarks { _ in
-                        AxisValueLabel()
-                            .font(.system(size: 10, weight: .semibold))
+                    AxisMarks { value in
+                        AxisValueLabel {
+                            if let name = value.as(String.self) {
+                                let maxChars: Int = {
+                                    switch latestBalances.count {
+                                    case 6: return 9
+                                    case 5: return 11
+                                    default: return 15
+                                    }
+                                }()
+                                Text(name.count > maxChars ? String(name.prefix(maxChars - 1)) + "…" : name)
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                        }
                     }
                 }
                 .chartYAxis {
@@ -651,7 +880,7 @@ struct MainView: View {
                         AxisValueLabel {
                             if let amount = value.as(Double.self) {
                                 Text(abbreviatedAmount(amount))
-                                    .font(.caption)
+                                    .font(.footnote)
                             }
                         }
                     }
@@ -669,6 +898,7 @@ struct MainView: View {
                 )
                 .id(currentPeriodIndex)
                 .transition(.opacity.combined(with: .slide))
+                .offset(x: chartWiggleOffset, y: chartWiggleVertical)
             } else if allBalances.isEmpty {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.gray.opacity(0.1))
@@ -747,13 +977,6 @@ struct MainView: View {
                     } label: {
                         Label("Rename", systemImage: "pencil")
                     }
-                    if let balance = balance {
-                        Button {
-                            editingBalance = balance
-                        } label: {
-                            Label("Edit Balance", systemImage: "dollarsign.circle")
-                        }
-                    }
                     Button(role: .destructive) {
                         deletingCategory = category
                     } label: {
@@ -787,11 +1010,19 @@ struct MainView: View {
                     Text("Add Account")
                 }
                 .font(.callout)
-                .foregroundColor(colorScheme == .dark ? Color(red: 0.43, green: 0.60, blue: 0.76) : Color(red: 0.30, green: 0.45, blue: 0.60))
+                .foregroundColor(categories.count >= 6 ? .gray.opacity(0.4) : (colorScheme == .dark ? Color(red: 0.43, green: 0.60, blue: 0.76) : Color(red: 0.30, green: 0.45, blue: 0.60)))
             }
+            .disabled(categories.count >= 6)
             .padding(.horizontal)
             .padding(.top, 16)
             .padding(.bottom, 6)
+            
+            if categories.count >= 6 {
+                Text("6 account limit reached")
+                    .font(.caption)
+                    .foregroundColor(.gray.opacity(0.4))
+                    .padding(.horizontal)
+            }
         }
         .padding(.top, -1)
     }
@@ -921,9 +1152,20 @@ struct MainView: View {
                 }
             }
             .chartXAxis {
-                AxisMarks { _ in
-                    AxisValueLabel()
-                        .font(.caption.weight(.semibold))
+                AxisMarks { value in
+                    AxisValueLabel {
+                        if let name = value.as(String.self) {
+                            let maxChars: Int = {
+                                switch latestBalances.count {
+                                case 6: return 9
+                                case 5: return 11
+                                default: return 15
+                                }
+                            }()
+                            Text(name.count > maxChars ? String(name.prefix(maxChars - 1)) + "…" : name)
+                                .font(.caption.weight(.semibold))
+                        }
+                    }
                 }
             }
             .chartYAxis {
@@ -951,6 +1193,7 @@ struct RecordMonthView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Category.sortOrder) private var categories: [Category]
+    @AppStorage("hasAskedNotificationPermission") private var hasAskedNotification = false
     
     @State private var selectedDate = Date()
     @State private var amounts: [String] = []
@@ -961,9 +1204,21 @@ struct RecordMonthView: View {
         NavigationStack {
             Form {
                 Section("Date") {
+                    #if DEBUG
+                    if screenshotMode || debugMode {
+                        DatePicker("Record date", selection: $selectedDate, displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .padding(.leading, 4)
+                    } else {
+                        DatePicker("Record date", selection: $selectedDate, in: ...Date(), displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .padding(.leading, 4)
+                    }
+                    #else
                     DatePicker("Record date", selection: $selectedDate, in: ...Date(), displayedComponents: .date)
                         .datePickerStyle(.compact)
                         .padding(.leading, 4)
+                    #endif
                     Text("One entry per month. Recording again will update that month.")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -1013,12 +1268,16 @@ struct RecordMonthView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
-                        .fontWeight(.bold)
-                        .buttonStyle(.borderedProminent)
-                        .tint(Color(red: 0.30, green: 0.45, blue: 0.60))
-                        .controlSize(.small)
-                        .disabled({
+                    Button(action: { save() }) {
+                        Text("Save")
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(red: 0.22, green: 0.38, blue: 0.55))
+                    .shadow(color: Color(red: 0.22, green: 0.38, blue: 0.55).opacity(0.4), radius: 4, x: 0, y: 2)
+                    .controlSize(.small)
+                    .disabled({
                             let allValid = amounts.allSatisfy {
                                 let raw = $0.replacingOccurrences(of: ",", with: "")
                                 guard let amount = Double(raw), amount >= 0 else { return false }
@@ -1119,6 +1378,13 @@ struct RecordMonthView: View {
         }
         
         try? modelContext.save()
+        
+        // Request notification permission after first successful Record
+        if !hasAskedNotification {
+            hasAskedNotification = true
+            requestAndScheduleMonthlyReminder()
+        }
+        
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         dismiss()
     }
@@ -1128,6 +1394,7 @@ struct RecordMonthView: View {
 
 struct GrowthSummaryView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     let selectedPeriod: (year: Int, month: Int, day: Int)?
     let allBalances: [Balance]
     let periods: [(year: Int, month: Int, day: Int)]
@@ -1140,7 +1407,7 @@ struct GrowthSummaryView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 0) {
                 if periods.count < 2 {
                     Text("Record another month to see growth.")
                         .foregroundColor(.secondary)
@@ -1167,7 +1434,7 @@ struct GrowthSummaryView: View {
                         let firstDate = Calendar.current.date(from: DateComponents(year: first.year, month: first.month, day: first.day)) ?? Date()
                         let selectedDate = Calendar.current.date(from: DateComponents(year: selected.year, month: selected.month, day: selected.day)) ?? Date()
                         
-                        Label("First recorded (\(firstDate, format: .dateTime.month(.abbreviated).day().year()))", systemImage: "calendar")
+                        Label("\(firstDate, format: .dateTime.month(.wide)) (first recorded)", systemImage: "calendar")
                             .foregroundColor(.secondary)
                         Text(formatFullAmount(firstTotal))
                             .font(.title2)
@@ -1178,7 +1445,7 @@ struct GrowthSummaryView: View {
                             let priorDate = Calendar.current.date(from: DateComponents(year: priorPeriod.year, month: priorPeriod.month, day: priorPeriod.day)) ?? Date()
                             let monthChange = selectedTotal - priorTotal
                             let monthPct = priorTotal > 0 ? (monthChange / priorTotal) * 100 : 0
-                            Label("Prior month (\(priorDate, format: .dateTime.month(.abbreviated).day().year()))", systemImage: "calendar")
+                            Label("\(priorDate, format: .dateTime.month(.wide)) (prior month)", systemImage: "calendar")
                                 .foregroundColor(.secondary)
                             HStack(spacing: 6) {
                                 Text(formatFullAmount(priorTotal))
@@ -1186,21 +1453,31 @@ struct GrowthSummaryView: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(.secondary)
                                 Text("(\(monthChange >= 0 ? "+" : "-")\(formatFullAmount(abs(monthChange))), \(monthPct, specifier: "%.1f")%)")
-                                    .font(.caption)
+                                    .font(.system(size: 15))
                                     .foregroundColor(monthChange >= 0 ? moneyGreen : .red)
                             }
                         }
                         
-                        Label("Current month (\(selectedDate, format: .dateTime.month(.abbreviated).day().year()))", systemImage: "calendar")
+                        Label("\(selectedDate, format: .dateTime.month(.wide)) (current)", systemImage: "calendar")
                             .foregroundColor(.secondary)
                         Text(formatFullAmount(selectedTotal))
                             .font(.title2)
                             .fontWeight(.bold)
-                        
-                        Divider()
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                    
+                    Divider()
+                        .padding(.horizontal)
+                        .padding(.top, 12)
+                        .padding(.bottom, 12)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        let firstDate = Calendar.current.date(from: DateComponents(year: first.year, month: first.month, day: first.day)) ?? Date()
+                        let selectedDate = Calendar.current.date(from: DateComponents(year: selected.year, month: selected.month, day: selected.day)) ?? Date()
                         
                         HStack {
-                            Text("Growth (since \(firstDate, format: .dateTime.month(.abbreviated).day().year())):")
+                            Text("Total growth from \(firstDate, format: .dateTime.month(.wide)) to \(selectedDate, format: .dateTime.month(.wide)):")
                                 .foregroundColor(.secondary)
                                 .font(.subheadline)
                         }
@@ -1211,7 +1488,12 @@ struct GrowthSummaryView: View {
                         }
                         .font(.title3)
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    
+                    Divider()
+                        .padding(.horizontal)
+                        .padding(.top, 12)
+                        .padding(.bottom, 24)
                     
                     // Line chart showing total over time
                     Chart {
@@ -1236,14 +1518,18 @@ struct GrowthSummaryView: View {
                                 x: .value("Month", date),
                                 y: .value("Total", periodTotal)
                             )
-                            .foregroundStyle(moneyGreen)
+                            .foregroundStyle(colorScheme == .dark ? Color(red: 0.65, green: 0.55, blue: 0.30) : Color(red: 0.75, green: 0.63, blue: 0.0))
                             .symbolSize(30)
                         }
                     }
                     .chartXAxis {
-                        AxisMarks(values: .automatic) { _ in
+                        let dates: [Date] = periods.map { period in
+                            Calendar.current.date(from: DateComponents(year: period.year, month: period.month, day: period.day)) ?? Date()
+                        }
+                        AxisMarks(values: dates) { _ in
                             AxisValueLabel(format: .dateTime.month(.abbreviated))
-                                .font(.caption)
+                                .font(.footnote)
+                                .foregroundStyle(colorScheme == .dark ? Color(red: 0.75, green: 0.65, blue: 0.38) : Color(red: 0.20, green: 0.40, blue: 0.28))
                         }
                     }
                     .chartYAxis {
@@ -1253,12 +1539,20 @@ struct GrowthSummaryView: View {
                             AxisValueLabel {
                                 if let amount = value.as(Double.self) {
                                     Text(abbreviatedAmount(amount))
-                                        .font(.caption)
+                                        .font(.footnote)
+                                        .foregroundStyle(colorScheme == .dark ? Color(red: 0.65, green: 0.55, blue: 0.30) : Color(red: 0.20, green: 0.40, blue: 0.28))
+                                        .padding(.trailing, 6)
                                 }
                             }
                         }
                     }
                     .frame(height: 200)
+                    .padding(.top, 24)
+                    .padding([.horizontal, .bottom], 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.1))
+                    )
                     .padding(.horizontal)
                     }
                 }
@@ -1292,11 +1586,71 @@ struct EditBalanceView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var balance: Balance
     @State private var amountText: String = ""
+    @State private var isRenaming = false
+    @State private var renameText: String = ""
+    @Query(sort: \Category.sortOrder) private var categories: [Category]
+    
+    private var isDuplicateName: Bool {
+        let trimmed = renameText.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !trimmed.isEmpty else { return false }
+        return categories.contains { $0.id != balance.category?.id && $0.name.lowercased() == trimmed }
+    }
+    
+    private var nameHasChanged: Bool {
+        let trimmed = renameText.trimmingCharacters(in: .whitespaces)
+        return trimmed != (balance.category?.name ?? "")
+    }
     
     var body: some View {
         NavigationStack {
             Form {
-                Section(balance.category?.name ?? "Amount") {
+                Section {
+                    if isRenaming {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                TextField("Account name", text: $renameText)
+                                    .font(.body)
+                                    .autocorrectionDisabled()
+                                    .onChange(of: renameText) { _, newValue in
+                                        if newValue.count > 15 { renameText = String(newValue.prefix(15)) }
+                                    }
+                                Button {
+                                    let name = renameText.trimmingCharacters(in: .whitespaces)
+                                    if !name.isEmpty && !isDuplicateName {
+                                        balance.category?.name = name
+                                    }
+                                    isRenaming = false
+                                } label: {
+                                    Text("Done")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(nameHasChanged ? .blue : .secondary)
+                                }
+                                .disabled(renameText.trimmingCharacters(in: .whitespaces).isEmpty || isDuplicateName)
+                            }
+                            if isDuplicateName {
+                                Text("Name already exists")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                        }
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                    } else {
+                        HStack {
+                            Text(balance.category?.name ?? "Amount")
+                                .font(.body)
+                            Spacer()
+                            Button {
+                                renameText = balance.category?.name ?? ""
+                                isRenaming = true
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                     HStack {
                         Text("$")
                             .font(.title3)
@@ -1337,7 +1691,7 @@ struct EditBalanceView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(action: {
                         let raw = amountText.replacingOccurrences(of: ",", with: "")
                         if let amount = Double(raw), amount >= 0 {
                             balance.amount = amount
@@ -1345,9 +1699,14 @@ struct EditBalanceView: View {
                         }
                         UINotificationFeedbackGenerator().notificationOccurred(.success)
                         dismiss()
+                    }) {
+                        Text("Save")
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(Color(red: 0.30, green: 0.45, blue: 0.60))
+                    .tint(Color(red: 0.22, green: 0.38, blue: 0.55))
+                    .shadow(color: Color(red: 0.22, green: 0.38, blue: 0.55).opacity(0.4), radius: 4, x: 0, y: 2)
                     .controlSize(.small)
                     .disabled({
                         let raw = amountText.replacingOccurrences(of: ",", with: "")
@@ -1413,16 +1772,21 @@ struct ManageCategoryView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(action: {
                         let name = newName.trimmingCharacters(in: .whitespaces)
                         if !name.isEmpty {
                             category.name = name
                         }
                         UINotificationFeedbackGenerator().notificationOccurred(.success)
                         dismiss()
+                    }) {
+                        Text("Save")
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(Color(red: 0.30, green: 0.45, blue: 0.60))
+                    .tint(Color(red: 0.22, green: 0.38, blue: 0.55))
+                    .shadow(color: Color(red: 0.22, green: 0.38, blue: 0.55).opacity(0.4), radius: 4, x: 0, y: 2)
                     .controlSize(.small)
                     .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty || isDuplicateName)
                 }
@@ -1530,10 +1894,14 @@ struct AddAccountView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") { save() }
-                        .fontWeight(.bold)
-                        .buttonStyle(.borderedProminent)
-                        .tint(Color(red: 0.30, green: 0.45, blue: 0.60))
+                    Button(action: { save() }) {
+                        Text("Add")
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color(red: 0.22, green: 0.38, blue: 0.55))
+                    .shadow(color: Color(red: 0.22, green: 0.38, blue: 0.55).opacity(0.4), radius: 4, x: 0, y: 2)
                         .controlSize(.small)
                         .disabled(accountName.trimmingCharacters(in: .whitespaces).isEmpty || isDuplicateName || {
                             let raw = balanceText.replacingOccurrences(of: ",", with: "")
@@ -1672,6 +2040,7 @@ struct SpeechBubbleShape: Shape {
 
 struct QuoteView: View {
     @State private var currentQuote: (text: String, author: String)
+    @State private var quoteOpacity: Double = 1.0
     
     private static let quotes: [(String, String)] = [
         ("Do not save what is left after spending, but spend what is left after saving.", "— Warren Buffett"),
@@ -1706,6 +2075,7 @@ struct QuoteView: View {
                     .padding(.top, 4)
             }
             .frame(maxWidth: 260)
+            .opacity(quoteOpacity)
             
             Button(action: refresh) {
                 Image(systemName: "arrow.clockwise")
@@ -1722,8 +2092,16 @@ struct QuoteView: View {
     }
     
     private func refresh() {
-        let q = Self.quotes.randomElement()!
-        currentQuote = (text: q.0, author: q.1)
+        withAnimation(.easeOut(duration: 0.2)) {
+            quoteOpacity = 0
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            let q = Self.quotes.randomElement()!
+            currentQuote = (text: q.0, author: q.1)
+            withAnimation(.easeIn(duration: 0.3)) {
+                quoteOpacity = 1
+            }
+        }
     }
 }
 

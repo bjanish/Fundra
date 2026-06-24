@@ -25,7 +25,7 @@ PRIVACY FIRST
 Your data stays on your device. Fundra never connects to the internet, never collects analytics, and never sees your financial information. What you save is yours alone.
 
 ## Keywords (100 chars max)
-savings,tracker,budget,finance,money,growth,accounts,balance,chart,personal
+savings,tracker,budget,finance,money,growth,accounts,balance,offline,private,simple,goal,monthly
 
 ## Category
 Finance

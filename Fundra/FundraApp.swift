@@ -44,6 +44,7 @@ struct FundraApp: App {
             }
         }
     }
+    
 }
 
 struct LockScreenView: View {
@@ -90,6 +91,13 @@ struct LockScreenView: View {
     }
     
     private func authenticate() {
+        #if DEBUG
+        if screenshotMode || debugMode {
+            isUnlocked = true
+            return
+        }
+        #endif
+        
         let context = LAContext()
         var error: NSError?
         

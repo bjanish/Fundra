@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Remind to update changelog when ContentView changes",
+      "trigger": "PostFileSave",
+      "description": "Prompts a reminder to update the changelog when ContentView.swift is saved with user-facing changes.",
+      "matcher": "ContentView\\\\.swift$",
+      "action": {
+        "type": "agent",
+        "prompt": "ContentView.swift was just saved. If user-facing changes were made in this session, remind Brian to update docs/Changelog-1.1.md if it hasn't been updated already."
+      }
+    }
+  ]
+}

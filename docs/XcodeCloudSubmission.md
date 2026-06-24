@@ -108,3 +108,14 @@ Common fixes:
 - [ ] Bundle ID matches App Store Connect
 - [ ] Version number set to 1.0.0
 - [ ] Build number incremented
+
+## Releasing an Update (1.1+)
+
+Since everything is already set up, future releases are just:
+
+1. Bump version number in Xcode (target → General)
+2. Turn off screenshot mode → test as a real user in Simulator
+3. Turn screenshot mode back on (for future screenshot sessions)
+4. Commit and push to GitHub
+5. Run Xcode Cloud workflow
+6. In App Store Connect: select new build, add "What's New" text, submit

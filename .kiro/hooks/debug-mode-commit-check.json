@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Remind to turn off debug mode before commit",
+      "trigger": "PreToolUse",
+      "description": "Checks if debug mode is enabled when a bash command runs (like git commit) and warns before proceeding.",
+      "matcher": "execute_bash",
+      "action": {
+        "type": "command",
+        "command": "grep -q 'let screenshotMode = true' Fundra/ContentView.swift && echo '⚠️ Debug mode is still ON (screenshotMode = true). Turn it off before committing?' >&2 && exit 0 || exit 0"
+      }
+    }
+  ]
+}

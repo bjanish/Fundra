@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Remind to run unit tests",
+      "trigger": "PostFileSave",
+      "description": "Prompts a test reminder whenever ContentView.swift or Item.swift is saved, since those files contain the validated/formatted logic covered by unit tests.",
+      "matcher": "ContentView\\.swift|Item\\.swift",
+      "action": {
+        "type": "agent",
+        "prompt": "Remind Brian to run unit tests (⌘U in Xcode) since validation or formatting logic may have changed. Tests cover: filterAmountInput, abbreviatedAmount, formatFullAmount."
+      }
+    }
+  ]
+}

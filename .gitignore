@@ -1,0 +1,18 @@
+# Xcode
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.xcworkspace/xcuserdata/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+
+# macOS
+.DS_Store
+
+# Screenshot helpers
+docs/ScreenshotData.md
+docs/screenshot-mockup.html
