@@ -104,15 +104,19 @@
 ## TODO Before Release
 - ~~Re-add date restriction on Record DatePicker~~ ✅ Done (no longer relevant — debug mode handles testing)
 - ~~Submit to App Store~~ ✅ Submitted via Xcode Cloud (Xcode 26.5 RC)
+- ~~Submit v1.1~~ ✅ Submitted for review
 
 ## Deployment
 - GitHub repo: github.com/bjanish/Fundra (private)
-- Xcode Cloud workflow: "Release" — Archive + App Store Connect distribution
-- Xcode version for builds: Xcode 26.5 RC (required — iOS 26 SDK needed, stable Xcode 16 rejected)
+- Xcode Cloud workflow: "Release" — Archive + App Store Connect distribution; manual start only (auto-trigger disabled via custom rule)
+- Xcode version for builds: Xcode 26.5 RC (required — project format downgraded to objectVersion 70 for compatibility)
 - Release checklist lives in `docs/XcodeCloudSubmission.md` (includes "Releasing an Update" section)
 - Screenshot framing tool: appshots.appstore.xyz; captions/colors in `docs/ScreenshotCaptions.md`
-- Current App Store status: v1.0 approved and live
+- Current App Store status: v1.1 submitted for review (v1.0 live)
 - v1.1 changes tracked in `docs/Changelog-1.1.md`
+- Next version: 2.0 (Goals feature, Pro tier) — use `git checkout -b v2.0` to start
+- Manual release preferred for future submissions (gives window to reject before going live)
+- Screenshot mode seeds Record date to Apr 15, 2026 for neutral date display
 
 ## Git Reminders
 - Remind Brian to commit after any meaningful code change (don't let work pile up uncommitted)
@@ -126,5 +130,6 @@
 - ~~If the final month is being deleted, go to the onboarding screen after deleted~~ ✅ Done
 
 ### Version 2 (Pro)
+- Locale-aware currency formatting (use device locale, replace all hardcoded `$`) — do this FIRST before Goals
 - Goals feature
 - Cumulative monthly bar chart — each bar = total savings across all accounts for that month; shows overall savings trajectory at a glance
