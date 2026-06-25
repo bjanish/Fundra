@@ -31,13 +31,33 @@ let moneyGreen = Color(red: 0.26, green: 0.54, blue: 0.38)
 
 private let allowedAmountCharacters = CharacterSet(charactersIn: "0123456789.,")
 
+// MARK: - Locale-Aware Currency Formatting
+
+private let currencySymbol: String = {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .currency
+    formatter.locale = Locale.current
+    return formatter.currencySymbol ?? "$"
+}()
+
+private let decimalSeparator: String = {
+    Locale.current.decimalSeparator ?? "."
+}()
+
 func filterAmountInput(_ value: String) -> String {
     var filtered = String(value.unicodeScalars.filter { allowedAmountCharacters.contains($0) })
     
-    // Allow only one decimal point
+    // Normalize: treat both . and , as the decimal separator
+    let sep: Character = decimalSeparator == "," ? "," : "."
+    let otherSep: Character = sep == "," ? "." : ","
+    
+    // Replace the non-locale separator with the locale one
+    filtered = filtered.map { $0 == otherSep ? sep : $0 }.map(String.init).joined()
+    
+    // Allow only one decimal separator
     var foundFirst = false
     filtered = String(filtered.filter { char in
-        if char == "." {
+        if char == sep {
             if foundFirst { return false }
             foundFirst = true
         }
@@ -45,9 +65,9 @@ func filterAmountInput(_ value: String) -> String {
     })
     
     // Limit to 2 decimal places
-    if let dotIndex = filtered.firstIndex(of: ".") {
+    if let dotIndex = filtered.firstIndex(of: sep) {
         let afterDot = filtered[filtered.index(after: dotIndex)...]
-        let digitsAfterDot = afterDot.filter { $0 != "," }
+        let digitsAfterDot = afterDot.filter { $0.isNumber }
         if digitsAfterDot.count > 2 {
             let endIndex = filtered.index(dotIndex, offsetBy: 3)
             filtered = String(filtered[...endIndex])
@@ -59,11 +79,11 @@ func filterAmountInput(_ value: String) -> String {
 
 func abbreviatedAmount(_ amount: Double) -> String {
     if amount >= 1_000_000 {
-        return String(format: "$%.1fM", amount / 1_000_000)
+        return String(format: "\(currencySymbol)%.1fM", amount / 1_000_000)
     } else if amount >= 100_000 {
-        return String(format: "$%.0fK", amount / 1_000)
+        return String(format: "\(currencySymbol)%.0fK", amount / 1_000)
     } else if amount >= 10_000 {
-        return String(format: "$%.1fK", amount / 1_000)
+        return String(format: "\(currencySymbol)%.1fK", amount / 1_000)
     } else {
         return formatFullAmount(amount)
     }
@@ -72,14 +92,14 @@ func abbreviatedAmount(_ amount: Double) -> String {
 func formatFullAmount(_ amount: Double) -> String {
     let formatter = NumberFormatter()
     formatter.numberStyle = .currency
-    formatter.currencySymbol = "$"
+    formatter.locale = Locale.current
     if amount.truncatingRemainder(dividingBy: 1) == 0 {
         formatter.maximumFractionDigits = 0
     } else {
         formatter.maximumFractionDigits = 2
         formatter.minimumFractionDigits = 2
     }
-    return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
+    return formatter.string(from: NSNumber(value: amount)) ?? "\(currencySymbol)\(amount)"
 }
 
 // MARK: - Monthly Reminder Notification
@@ -943,14 +963,7 @@ struct MainView: View {
                         .foregroundColor(Color(white: 0.35))
                     Spacer()
                     if let balance = balance {
-                        Text({
-                            let formatter = NumberFormatter()
-                            formatter.numberStyle = .currency
-                            formatter.currencySymbol = "$"
-                            formatter.minimumFractionDigits = 2
-                            formatter.maximumFractionDigits = 2
-                            return formatter.string(from: NSNumber(value: balance.amount)) ?? "$\(balance.amount)"
-                        }())
+                        Text(formatFullAmount(balance.amount))
                             .font(.body)
                             .fontWeight(.semibold)
                             .foregroundColor(moneyGreen)
@@ -1231,7 +1244,7 @@ struct RecordMonthView: View {
                                     .font(.system(size: 16, weight: .regular))
                                     .foregroundColor(.secondary)
                                 HStack {
-                                    Text("$")
+                                    Text(currencySymbol)
                                         .font(.title3)
                                         .foregroundColor(.secondary)
                                     TextField(placeholders.indices.contains(index) ? placeholders[index] : "0.00", text: $amounts[index])
@@ -1656,7 +1669,7 @@ struct EditBalanceView: View {
                         }
                     }
                     HStack {
-                        Text("$")
+                        Text(currencySymbol)
                             .font(.title3)
                             .foregroundColor(.secondary)
                         TextField("0.00", text: $amountText)
@@ -1867,7 +1880,7 @@ struct AddAccountView: View {
                 
                 Section("Initial Balance") {
                     HStack {
-                        Text("$")
+                        Text(currencySymbol)
                             .font(.title3)
                             .foregroundColor(.secondary)
                         TextField("0.00", text: $balanceText)

@@ -52,6 +52,13 @@ A dead-simple "drawing straws" party app. Everyone draws a random card — highe
 
 ## v1.1+ Ideas (Future)
 
+### v2.0 — Bump to Compare (THE feature)
+- Two phones with High Card touch/bump → cards auto-compare
+- Winner's card glows GREEN, loser's card glows RED
+- Tech: Multipeer Connectivity (Bluetooth/WiFi, no internet needed)
+- Theatrical moment — people will record and post this
+- This is the TikTok-viral feature. Ship v1 simple, then drop this as the "wow" update.
+
 ### Enhancements
 - Haptic feedback on flip (medium impact)
 - Card snap sound effect
@@ -127,7 +134,7 @@ A dead-simple "drawing straws" party app. Everyone draws a random card — highe
 
 ## App Store Strategy
 
-- **Name:** TBD (brainstorm: DrawUp, CardPull, FlipDraw, TopCard, HighDraw)
+- **Name:** High Card
 - **Category:** Entertainment or Games → Card
 - **Rating:** 4+ (no drinking references in listing) or 17+ (if marketed as party/drinking)
 - **Keywords:** card game, party game, drinking game, draw card, random card, decision maker
