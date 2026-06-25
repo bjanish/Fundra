@@ -823,8 +823,6 @@ struct MainView: View {
     
     // MARK: - Chart
     
-    @State private var selectedAccountName: String? = nil
-    
     private var chartView: some View {
         Group {
             if !latestBalances.isEmpty {
@@ -844,16 +842,17 @@ struct MainView: View {
                         }
                     }
                 }
-                .chartXSelection(value: $selectedAccountName)
-                .onChange(of: selectedAccountName) { _, newValue in
-                    guard let name = newValue,
-                          let period = selectedPeriod,
-                          let category = categories.first(where: { $0.name == name }),
-                          let balance = category.balances.first(where: { $0.year == period.year && $0.month == period.month })
-                    else { return }
-                    editingBalance = balance
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        selectedAccountName = nil
+                .chartOverlay { proxy in
+                    GeometryReader { geometry in
+                        Rectangle().fill(.clear).contentShape(Rectangle())
+                            .onTapGesture { location in
+                                guard let name: String = proxy.value(atX: location.x) else { return }
+                                guard let period = selectedPeriod,
+                                      let category = categories.first(where: { $0.name == name }),
+                                      let balance = category.balances.first(where: { $0.year == period.year && $0.month == period.month })
+                                else { return }
+                                editingBalance = balance
+                            }
                     }
                 }
                 .chartXAxis {

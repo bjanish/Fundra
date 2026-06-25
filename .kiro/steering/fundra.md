@@ -133,3 +133,9 @@
 - Locale-aware currency formatting (use device locale, replace all hardcoded `$`) — do this FIRST before Goals
 - Goals feature
 - Cumulative monthly bar chart — each bar = total savings across all accounts for that month; shows overall savings trajectory at a glance
+- Horizontal bar chart option — scales better for many accounts, potential Pro feature to lift 6-account limit
+- Design polish pass — spacing, typography hierarchy, animations, dark mode refinement, empty states
+- Pro unlock: one-time IAP (~$3.99), NOT subscription — matches app philosophy (simple, honest, no recurring anxiety)
+- Pro bundle (TBD, finalize before coding): Goals + cumulative chart + possibly unlimited accounts
+- HYSA rate feature — show current high-yield savings rates + projected earnings based on user's total balance (e.g., "Your $19,120 could earn ~$860/year at 4.5% APY"). Needs API research. Could justify subscription if live data has ongoing cost.
+- HYSA monetization: include personal referral link from day one (earns per funded account, $50–$200 each). Scale to direct bank sponsorship when downloads grow. Referral works at any user count — don't wait.
