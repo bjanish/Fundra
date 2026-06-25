@@ -1296,6 +1296,11 @@ struct RecordMonthView: View {
                 amounts = Array(repeating: "", count: categories.count)
                 placeholders = Array(repeating: "0.00", count: categories.count)
                 isReady = true
+                #if DEBUG
+                if screenshotMode {
+                    selectedDate = Calendar.current.date(from: DateComponents(year: 2026, month: 4, day: 15)) ?? Date()
+                }
+                #endif
                 prefillAmounts()
             }
             .onChange(of: selectedDate) {

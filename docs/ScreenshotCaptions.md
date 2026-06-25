@@ -3,31 +3,31 @@
 ## 1. Main view (light)
 **Heading:** Your savings at a glance
 **Subheading:** See all your accounts in one place
-**Background:** #82AFA4
-**Text:** Black
+**Background:** #567F75
+**Text:** White
 
 ## 2. Growth Summary (light)
-**Heading:** Watch your savings grow
-**Subheading:** Month-over-month progress at your fingertips
-**Background:** #82AFA4
-**Text:** Black
+**Heading:** Track your growth
+**Subheading:** Monthly progress, visualized
+**Background:** #567F75
+**Text:** White
 
 ## 3. Record month (light)
-**Heading:** Track every month in seconds
-**Subheading:** One tap to update all your balances
-**Background:** #82AFA4
-**Text:** Black
+**Heading:** Log months fast
+**Subheading:** Update all at once
+**Background:** #567F75
+**Text:** White
 
 ## 4. Main view (dark)
-**Heading:** Beautiful in light and dark
-**Subheading:** Easy on the eyes, day or night
-**Background:** #2A3A38
+**Heading:** Looks great, always
+**Subheading:** Built for both modes
+**Background:** #567F75
 **Text:** White
 
 ## 5. Growth Summary (dark)
-**Heading:** Watch your savings grow
-**Subheading:** Month-over-month progress at your fingertips
-**Background:** #2A3A38
+**Heading:** Track your growth
+**Subheading:** Monthly progress, visualized
+**Background:** #567F75
 **Text:** White
 
 ---
