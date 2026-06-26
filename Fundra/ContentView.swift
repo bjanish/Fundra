@@ -140,6 +140,7 @@ struct ContentView: View {
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     #if DEBUG
     @State private var debugColorScheme: ColorScheme? = nil
+    @State private var hasSeeded = false
     #endif
     
     var body: some View {
@@ -152,7 +153,10 @@ struct ContentView: View {
         }
         #if DEBUG
         .onAppear {
-            if screenshotMode || debugMode { seedScreenshotData() }
+            if (screenshotMode || debugMode) && !hasSeeded {
+                hasSeeded = true
+                seedScreenshotData()
+            }
         }
         .preferredColorScheme((screenshotMode || debugMode) ? debugColorScheme : nil)
         .overlay(alignment: .topLeading) {
@@ -257,6 +261,7 @@ struct ContentView: View {
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var accountNames: [String] = ["", "", ""]
+    @State private var logoBarHeights: [CGFloat] = [8, 14, 22]
     @FocusState private var focusedField: Int?
     
     var body: some View {
@@ -271,8 +276,11 @@ struct OnboardingView: View {
                                 Color(red: 0.54, green: 0.73, blue: 0.63),
                                 Color(red: 0.76, green: 0.68, blue: 0.58),
                             ][index])
-                            .frame(width: 6, height: [8, 14, 22][index])
+                            .frame(width: 6, height: logoBarHeights[index])
                     }
+                }
+                .onAppear {
+                    randomizeBarHeights()
                 }
                 
                 VStack(spacing: 4) {
@@ -285,7 +293,7 @@ struct OnboardingView: View {
                         .italic()
                         .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
                     
-                    Text("Add your savings accounts to get started")
+                    Text("Add your savings to get started")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -294,14 +302,15 @@ struct OnboardingView: View {
             .padding(.bottom, 32)
             
             // Account inputs
-            VStack(spacing: 12) {
+            VStack(spacing: 15) {
+                let suggestions = ["e.g., Savings", "e.g., Vacation", "e.g., Emergency", "e.g., New Car", "e.g., Roth IRA", "e.g., Cash"]
                 ForEach(0..<accountNames.count, id: \.self) { index in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
                             Text("\(index + 1).")
                                 .foregroundColor(.secondary)
                                 .frame(width: 28)
-                            TextField("Account name", text: $accountNames[index])
+                            TextField("Name", text: $accountNames[index])
                                 .textFieldStyle(.roundedBorder)
                                 .textInputAutocapitalization(.words)
                                 .autocorrectionDisabled()
@@ -324,6 +333,11 @@ struct OnboardingView: View {
                                 .font(.caption)
                                 .foregroundColor(.red)
                                 .padding(.leading, 32)
+                        } else if accountNames[index].isEmpty {
+                            Text(suggestions[index % suggestions.count])
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 32)
                         }
                     }
                 }
@@ -334,6 +348,7 @@ struct OnboardingView: View {
                         focusedField = accountNames.count - 1
                     }
                     .font(.callout)
+                    .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
                     .padding(.top, 4)
                 }
             }
@@ -345,8 +360,9 @@ struct OnboardingView: View {
                 saveAccounts()
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .controlSize(.regular)
             .disabled(accountNames.allSatisfy { $0.trimmingCharacters(in: .whitespaces).isEmpty })
+            .padding(.top, 24)
             .padding(.bottom, 40)
         }
         .onAppear {
@@ -379,6 +395,19 @@ struct OnboardingView: View {
         guard !name.isEmpty else { return false }
         return accountNames.enumerated().contains { i, other in
             i < index && other.trimmingCharacters(in: .whitespaces).lowercased() == name
+        }
+    }
+    
+    private func randomizeBarHeights() {
+        withAnimation(.easeInOut(duration: 1.2)) {
+            logoBarHeights = [
+                CGFloat.random(in: 6...9),
+                CGFloat.random(in: 12...16),
+                CGFloat.random(in: 19...22),
+            ]
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            randomizeBarHeights()
         }
     }
 }
@@ -561,7 +590,7 @@ struct MainView: View {
                     HStack(spacing: 20) {
                         ShareLink(item: exportCSVData(), preview: SharePreview(exportFileName, image: exportPreviewImage)) {
                             HStack(spacing: 7) {
-                                MiniBarChartIcon()
+                                MiniBarChartIcon(animating: titleIconAnimating)
                                 Text("Export")
                             }
                             .font(.caption)
@@ -571,7 +600,7 @@ struct MainView: View {
                         if let chartURL = chartImageURL, let chartImage = renderedChartImage {
                             ShareLink(item: chartURL, preview: SharePreview("Fundra Chart", image: chartImage)) {
                                 HStack(spacing: 7) {
-                                    MiniBarChartIcon()
+                                    MiniBarChartIcon(animating: titleIconAnimating)
                                     Text("Save Chart")
                                 }
                                 .font(.caption)
@@ -580,7 +609,7 @@ struct MainView: View {
                         } else {
                             Button(action: {}) {
                                 HStack(spacing: 7) {
-                                    MiniBarChartIcon(opacity: 0.5)
+                                    MiniBarChartIcon(opacity: 0.5, animating: titleIconAnimating)
                                     Text("Save Chart")
                                 }
                                 .font(.caption)
@@ -1819,6 +1848,7 @@ struct ManageCategoryView: View {
 
 struct MiniBarChartIcon: View {
     var opacity: Double = 1.0
+    var animating: Bool = true
     
     private let barColors: [Color] = [
         Color(red: 0.43, green: 0.60, blue: 0.76),  // #6e98c2
@@ -1833,7 +1863,7 @@ struct MiniBarChartIcon: View {
             ForEach(0..<3, id: \.self) { index in
                 RoundedRectangle(cornerRadius: 1.5)
                     .fill(barColors[index].opacity(opacity))
-                    .frame(width: 4, height: barHeights[index])
+                    .frame(width: 4, height: animating ? barHeights[index] : 0)
             }
         }
         .frame(width: 16, height: 16)
@@ -1989,7 +2019,7 @@ struct ConfettiView: View {
     }
     
     private func createParticles(in size: CGSize) {
-        for i in 0..<40 {
+        for i in 0..<80 {
             let startX = CGFloat.random(in: 0...size.width)
             let startY: CGFloat = -20
             let color = colors.randomElement()!

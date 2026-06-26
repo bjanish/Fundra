@@ -4,7 +4,7 @@
 - Fundra is a privacy-first iOS savings tracker (iPhone-only, portrait-only)
 - Built with SwiftUI, SwiftData, Swift Charts
 - Fully offline — no network, no analytics, no accounts
-- Target: iOS 18+, Xcode 27, launching September 2026
+- Target: iOS 18+, Xcode 27, launched June 23, 2026
 
 ## Architecture
 - Single file: ContentView.swift (all views)
@@ -38,9 +38,12 @@
 - Long-press date to delete month (triggers heavy haptic feedback + confirmation alert)
 - Export/Save Chart positioned below the chart (not in account list)
 - Quote section: minimal styling, no bubble/shadow, just text + refresh icon; fade-out (0.2s easeOut) / fade-in (0.3s easeIn) animation on refresh; footnote italic text, caption author centered, constrained to 260pt width; refresh icon at 50% secondary opacity
-- Easter egg: tap Fundra title → bars deflate and rebuild with spring animation; every 3rd tap triggers confetti + earthquake jiggle (fixed 10-step diagonal pattern, ±6–7pt, rigid haptic bursts)
+- Easter egg: tap Fundra title → bars deflate and rebuild with spring animation; Export/Save Chart icons also deflate/rebuild in sync; every 3rd tap triggers confetti (80 particles) + earthquake jiggle (fixed 10-step diagonal pattern, ±6–7pt, rigid haptic bursts)
 - One-time tooltip: "Tip: Long-press an account to rename or delete it." (auto-dismisses after 10s, uses @AppStorage)
-- Onboarding: larger 3-bar icon above title, "Fundra" in italic muted blue (#6E98C2), subtitle in secondary
+- Onboarding: larger 3-bar icon above title with subtle animated height randomization (staircase shape always preserved — bar ranges: 6–9, 12–16, 19–22; 2s interval, 1.2s easeInOut transitions), "Fundra" in italic muted blue (#6E98C2), subtitle "Add your savings to get started" in secondary
+- Onboarding: account name suggestions below empty fields (e.g., Savings, Vacation, Emergency, New Car, Roth IRA, Cash) — 6 unique suggestions matching max 6 accounts
+- Onboarding: placeholder text "Name" (not "Account name"), input spacing 15pt, "＋ Add another" in muted blue
+- Onboarding: "Get Started" button uses .controlSize(.regular), 24pt top padding above it
 - Record pre-fills amounts when editing an existing month; shows previous month's values as gray placeholder text for new months
 - Monthly reminder notification: fires on the 1st of every month at 9 AM ("Time to record — update your savings totals in Fundra"). Permission requested once after first Record save, stored in @AppStorage. No settings UI — users manage via iOS Settings if they want to disable.
 - Edit Balance sheet: pencil icon next to account name for inline rename (discoverable path; long-press context menu stays as power-user path); "Done" button turns blue only when name has changed
@@ -93,9 +96,10 @@
 - Likes to validate ideas verbally before committing to code
 - Appreciates when I explain *why* something works, not just *how*
 - Will say "update steering" as a reminder, but prefers I do it proactively for design changes
-- When updating steering, also update `docs/Changelog-1.1.md` with a matching entry
+- When updating steering, also update the relevant changelog (e.g., `docs/Changelog-1.2.md`) with a matching entry
 - Conversational style: casual, curious, asks good follow-up questions
-- Next priority: Goals feature (Pro, v2)
+- Says "Done." as the signal to rebuild — don't say it prematurely
+- Next priority: ship v1.2, then Goals feature (Pro, v2)
 
 ## Testing
 - Unit tests exist in FundraTests for: filterAmountInput, abbreviatedAmount, formatFullAmount
@@ -105,6 +109,7 @@
 - ~~Re-add date restriction on Record DatePicker~~ ✅ Done (no longer relevant — debug mode handles testing)
 - ~~Submit to App Store~~ ✅ Submitted via Xcode Cloud (Xcode 26.5 RC)
 - ~~Submit v1.1~~ ✅ Submitted for review
+- ~~Submit v1.1.1~~ ✅ Live on App Store
 
 ## Deployment
 - GitHub repo: github.com/bjanish/Fundra (private)
@@ -112,9 +117,10 @@
 - Xcode version for builds: Xcode 26.5 RC (required — project format downgraded to objectVersion 70 for compatibility)
 - Release checklist lives in `docs/XcodeCloudSubmission.md` (includes "Releasing an Update" section)
 - Screenshot framing tool: appshots.appstore.xyz; captions/colors in `docs/ScreenshotCaptions.md`
-- Current App Store status: v1.1 submitted for review (v1.0 live)
+- Current App Store status: v1.1.1 live (v1.0 also available)
 - v1.1 changes tracked in `docs/Changelog-1.1.md`
-- Next version: 2.0 (Goals feature, Pro tier) — use `git checkout -b v2.0` to start
+- v1.2 changes tracked in `docs/Changelog-1.2.md`
+- Next version: 1.2 (onboarding polish, ready to submit), then 2.0 (Goals feature, Pro tier) — use `git checkout -b v2.0` to start
 - Manual release preferred for future submissions (gives window to reject before going live)
 - Screenshot mode seeds Record date to Apr 15, 2026 for neutral date display
 
@@ -125,9 +131,18 @@
 - Before starting a new major version: create a branch (e.g., `git checkout -b v2.0`)
 - If Brian says "I'm done for today" or wraps up a session with changes, remind him to commit + push
 - Never assume Git operations happened — always ask or remind
+- **Before every push:** check `objectVersion` in project.pbxproj — Xcode 27 silently upgrades it to 110. Must be 70 for Xcode Cloud (26.5). If it's 110, change it back to 70 before pushing.
 
-## TODO (Future)
-- ~~If the final month is being deleted, go to the onboarding screen after deleted~~ ✅ Done
+## Known Development Issues
+- Xcode 27 beta Debug builds have a "System gesture gate timed out" issue causing ~2s delay on first long-press gestures. This does NOT affect Release/App Store builds. It's an Apple beta bug.
+- `hasSeeded` flag in ContentView prevents screenshot/debug mode from re-seeding data after user deletes last month (avoids SwiftData thrashing loop)
+- `.chartXSelection` API was tested but reverted — requires double-tap sometimes. Keeping `.chartOverlay` approach for chart tap-to-edit.
+
+## App Store Performance
+- Launched: June 23, 2026
+- 16 first-time downloads in first 3 days (organic, no paid marketing)
+- 7.46% conversion rate (well above ~2-4% App Store average)
+- 454 impressions, 70 product page views
 
 ### Version 2 (Pro)
 - Locale-aware currency formatting (use device locale, replace all hardcoded `$`) — do this FIRST before Goals
