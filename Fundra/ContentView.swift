@@ -299,7 +299,9 @@ struct OnboardingView: View {
                         }
                     }
                     .onAppear {
-                        startWave(count: fullText.count)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            startWave(count: fullText.count)
+                        }
                     }
                     
                     Text("Add your savings to get started")
