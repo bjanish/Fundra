@@ -48,6 +48,36 @@ A "drawing straws" app using playing cards. Each person opens the app, draws a r
 - Built-in virality: everyone in the group must download to participate = organic growth loop
 - See `docs/CardApp-Idea.md` for full concept
 
+## Marketing Strategy (College Students)
+
+### Viral Mechanics
+- "You need 3+ players to start" — forces the downloader to recruit friends
+- Share a game code / QR that deep-links friends directly into a room
+- Post-game shareable results card (like Wordle's grid) for stories/group chats
+- "Challenge [friend's name]" button that sends an iMessage with app link
+
+### Campus-Specific Tactics
+- Target one dorm or friend group hard — if 5 people have it, the rest download out of FOMO
+- Offer student orgs a custom card back skin if they get 50 downloads from their campus
+- Position as "the pregame app" or "the game that replaces Cards Against Humanity"
+- Launch week: make it free, then go paid/IAP once traction builds
+
+### Custom Card Back Skins (Key Idea)
+- Each student org gets their own branded card back design at a download threshold
+- Digital merch that costs nothing to produce
+- Acts as both reward and in-game flex
+- Could be the monetization hook too — sell premium skins to individuals
+
+### Content & Social
+- TikTok clips of friend groups playing and reacting — reactions sell party games
+- "This app ended a friendship" style organic-feeling content
+- Reddit posts in college subreddits (r/college, specific school subs)
+
+### Core Insight
+- Party games spread through social proof, not features
+- One viral TikTok of people laughing while playing > any feature list
+- App must be dead simple to get into (under 10 seconds from download to playing)
+
 ## Notes
 - Independent random draws (no shared deck across devices)
 - Ties = redraw in person

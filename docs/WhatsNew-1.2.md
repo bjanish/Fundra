@@ -2,7 +2,6 @@
 
 ## App Store "What's New" Text
 
-- Onboarding now suggests account name ideas to help you get started faster
-- Animated logo on the onboarding screen
-- Improved onboarding styling and button sizing
-- Visual polish and animation improvements
+- Redesigned onboarding with animated welcome and account name suggestions
+- Growth preview chart shows what's coming after your first month
+- Visual polish and animation improvements throughout

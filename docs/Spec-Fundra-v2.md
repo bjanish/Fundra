@@ -7,6 +7,13 @@ Major update introducing Pro tier with Goals, improved charts, locale-aware curr
 
 ## Phase 1: Foundation (do first)
 
+### 0. Code Cleanup (before adding features)
+- **Extract color constants:** Create `let mutedBlue = Color(red: 0.43, green: 0.60, blue: 0.76)` (like moneyGreen) — eliminate repeated color literals
+- **Extract `RingedDot` view:** Reusable component for the ringed dot pattern (used in Growth + Record)
+- **Cache NumberFormatter:** `formatFullAmount` creates a new formatter every call — use a shared instance
+- **Consider splitting ContentView.swift:** Move OnboardingView, GrowthSummaryView, etc. into separate files as the codebase grows
+- **Effort:** ~30 min, low risk, makes v2 development cleaner
+
 ### 1. Locale-Aware Currency Formatting
 - **What:** Replace all hardcoded `$` with device locale currency (USD, EUR, GBP, JPY, etc.)
 - **How:** Single shared `NumberFormatter` with `.currencyStyle` and `Locale.current`
@@ -49,7 +56,15 @@ Major update introducing Pro tier with Goals, improved charts, locale-aware curr
 
 ## Phase 3: Polish
 
-### 6. Design Polish Pass
+### 6. Milestone Celebrations (v2.1)
+- **What:** Confetti + congratulatory message when total savings crosses round-number thresholds
+- **Thresholds:** TBD ($1K, $5K, $10K, $25K, $50K, $100K?)
+- **Scope:** Total savings (not per-account) — pairs naturally with Goals
+- **Persistence:** Track which milestones have fired (AppStorage or SwiftData) — don't repeat
+- **Edge case:** If user edits past month and dips below, don't re-fire on next crossing
+- **Pairs with Goals:** "You reached your $5K Emergency Fund goal!" > generic "You crossed $5K"
+
+### 7. Design Polish Pass
 - Spacing and alignment consistency audit
 - Typography hierarchy refinement (weight/size relationships)
 - Subtle transitions and micro-animations

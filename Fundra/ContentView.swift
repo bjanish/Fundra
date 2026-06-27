@@ -299,7 +299,7 @@ struct OnboardingView: View {
                         }
                     }
                     .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
                             startWave(count: fullText.count)
                         }
                     }
