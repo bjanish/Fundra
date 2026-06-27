@@ -318,9 +318,6 @@ struct OnboardingView: View {
                 ForEach(0..<accountNames.count, id: \.self) { index in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
-                            Text("\(index + 1).")
-                                .foregroundColor(.secondary)
-                                .frame(width: 28)
                             TextField("Name", text: $accountNames[index])
                                 .textFieldStyle(.plain)
                                 .padding(.horizontal, 12)
@@ -349,12 +346,12 @@ struct OnboardingView: View {
                             Text("Already added")
                                 .font(.caption)
                                 .foregroundColor(.red)
-                                .padding(.leading, 32)
+                                .padding(.leading, 12)
                         } else {
                             Text(suggestions[index % suggestions.count])
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
-                                .padding(.leading, 32)
+                                .padding(.leading, 12)
                                 .opacity(accountNames[index].isEmpty ? 1 : 0)
                         }
                     }
