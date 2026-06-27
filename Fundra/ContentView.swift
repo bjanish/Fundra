@@ -355,17 +355,22 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 32)
             
-            Spacer()
-            
             Button("Get Started") {
                 saveAccounts()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.regular)
             .disabled(accountNames.allSatisfy { $0.trimmingCharacters(in: .whitespaces).isEmpty })
-            .padding(.top, 24)
+            .padding(.top, 30)
             .padding(.bottom, 40)
+            
+            Spacer()
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            focusedField = nil
+        }
+        .ignoresSafeArea(.keyboard)
         .onAppear {
             focusedField = 0
         }

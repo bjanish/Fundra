@@ -43,7 +43,8 @@
 - Onboarding: larger 3-bar icon above title with subtle animated height randomization (staircase shape always preserved — bar ranges: 6–9, 12–16, 19–22; 2s interval, 1.2s easeInOut transitions), "Fundra" in italic muted blue (#6E98C2), subtitle "Add your savings to get started" in secondary
 - Onboarding: account name suggestions below empty fields (e.g., Savings, Vacation, Emergency, New Car, Roth IRA, Cash) — 6 unique suggestions matching max 6 accounts; suggestion text reserves space (opacity 0) when field has input to prevent layout jump
 - Onboarding: placeholder text "Name" (not "Account name"), input spacing 15pt, "＋ Add another" in muted blue
-- Onboarding: "Get Started" button uses .controlSize(.regular), 24pt top padding above it
+- Onboarding: "Get Started" button uses .controlSize(.regular), 30pt top padding above it, pinned below inputs (no Spacer push)
+- Onboarding: tap outside text fields dismisses keyboard (contentShape + onTapGesture clearing focus)
 - Record sheet: muted blue ringed dot (10pt outer stroke, 5pt inner fill) before "Record date" label — same dot style as Growth chart, ties the sheet to Fundra branding; DatePicker tinted to matching muted blue
 - Record pre-fills amounts when editing an existing month; shows previous month's values as gray placeholder text for new months
 - Monthly reminder notification: fires on the 1st of every month at 9 AM ("Time to record — update your savings totals in Fundra"). Permission requested once after first Record save, stored in @AppStorage. No settings UI — users manage via iOS Settings if they want to disable.
@@ -101,6 +102,7 @@
 - Conversational style: casual, curious, asks good follow-up questions
 - Says "Done." as the signal to rebuild — don't say it prematurely
 - **NEVER commit or push unless Brian explicitly asks. Wait for approval after every feature change.**
+- Never suggest Brian go to bed, rest, or wrap up for the night — unless he says "Goodnight"
 - Next priority: ship v1.2, then Goals feature (Pro, v2)
 
 ## Testing
