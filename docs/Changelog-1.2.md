@@ -12,6 +12,7 @@
 ## Easter Egg / Polish
 8. Export/Save Chart icons animate in sync with title tap (deflate + rebuild)
 9. Confetti doubled (80 particles)
+10. Record sheet: muted blue ringed dot before "Record date" label (matches Growth chart dot style)
 
 ## Developer-Only
 10. MiniBarChartIcon: added `animating` parameter for deflate/rebuild support

@@ -1247,16 +1247,52 @@ struct RecordMonthView: View {
                 Section("Date") {
                     #if DEBUG
                     if screenshotMode || debugMode {
-                        DatePicker("Record date", selection: $selectedDate, displayedComponents: .date)
+                        DatePicker(selection: $selectedDate, displayedComponents: .date) {
+                            HStack(spacing: 6) {
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
+                                        .frame(width: 10, height: 10)
+                                    Circle()
+                                        .fill(Color(red: 0.43, green: 0.60, blue: 0.76))
+                                        .frame(width: 5, height: 5)
+                                }
+                                Text("Record date")
+                            }
+                        }
                             .datePickerStyle(.compact)
                             .padding(.leading, 4)
                     } else {
-                        DatePicker("Record date", selection: $selectedDate, in: ...Date(), displayedComponents: .date)
+                        DatePicker(selection: $selectedDate, in: ...Date(), displayedComponents: .date) {
+                            HStack(spacing: 6) {
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
+                                        .frame(width: 10, height: 10)
+                                    Circle()
+                                        .fill(Color(red: 0.43, green: 0.60, blue: 0.76))
+                                        .frame(width: 5, height: 5)
+                                }
+                                Text("Record date")
+                            }
+                        }
                             .datePickerStyle(.compact)
                             .padding(.leading, 4)
                     }
                     #else
-                    DatePicker("Record date", selection: $selectedDate, in: ...Date(), displayedComponents: .date)
+                    DatePicker(selection: $selectedDate, in: ...Date(), displayedComponents: .date) {
+                        HStack(spacing: 6) {
+                            ZStack {
+                                Circle()
+                                    .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
+                                    .frame(width: 10, height: 10)
+                                Circle()
+                                    .fill(Color(red: 0.43, green: 0.60, blue: 0.76))
+                                    .frame(width: 5, height: 5)
+                            }
+                            Text("Record date")
+                        }
+                    }
                         .datePickerStyle(.compact)
                         .padding(.leading, 4)
                     #endif
