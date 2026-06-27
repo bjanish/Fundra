@@ -1288,7 +1288,27 @@ struct RecordMonthView: View {
             Form {
                 Section("Date") {
                     #if DEBUG
-                    if screenshotMode || debugMode {
+                    if screenshotMode {
+                        // Screenshot mode: restrict to seeded date (looks like production)
+                        let screenshotMaxDate = Calendar.current.date(from: DateComponents(year: 2026, month: 4, day: 15))!
+                        DatePicker(selection: $selectedDate, in: ...screenshotMaxDate, displayedComponents: .date) {
+                            HStack(spacing: 6) {
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
+                                        .frame(width: 10, height: 10)
+                                    Circle()
+                                        .fill(Color(red: 0.43, green: 0.60, blue: 0.76))
+                                        .frame(width: 5, height: 5)
+                                }
+                                Text("Record date")
+                            }
+                        }
+                            .datePickerStyle(.compact)
+                            .tint(Color(red: 0.43, green: 0.60, blue: 0.76))
+                            .padding(.leading, 4)
+                    } else if debugMode {
+                        // Debug mode: no date restriction
                         DatePicker(selection: $selectedDate, displayedComponents: .date) {
                             HStack(spacing: 6) {
                                 ZStack {
