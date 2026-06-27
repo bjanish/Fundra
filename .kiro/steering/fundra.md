@@ -40,12 +40,13 @@
 - Quote section: minimal styling, no bubble/shadow, just text + refresh icon; fade-out (0.2s easeOut) / fade-in (0.3s easeIn) animation on refresh; footnote italic text, caption author centered, constrained to 260pt width; refresh icon at 50% secondary opacity
 - Easter egg: tap Fundra title → bars deflate and rebuild with spring animation; Export/Save Chart icons also deflate/rebuild in sync; every 3rd tap triggers confetti (80 particles) + earthquake jiggle (fixed 10-step diagonal pattern, ±6–7pt, rigid haptic bursts)
 - One-time tooltip: "Tip: Long-press an account to rename or delete it." (auto-dismisses after 10s, uses @AppStorage)
-- Onboarding: larger 3-bar icon above title with subtle animated height randomization (staircase shape always preserved — bar ranges: 6–9, 12–16, 19–22; 2s interval, 1.2s easeInOut transitions), "Fundra" in italic muted blue (#6E98C2), subtitle "Add your savings to get started" in secondary
+- Onboarding: larger 3-bar icon above title with subtle animated height randomization (staircase shape always preserved — bar ranges: 6–9, 12–16, 19–22; 2s interval, 1.2s easeInOut transitions), "Welcome to Fundra" with wave animation (letters bounce -10pt sequentially, 0.06s stagger, 0.25s easeInOut), "Fundra" in italic muted blue (#6E98C2), subtitle "Add your savings to get started" in secondary
 - Onboarding: account name suggestions below empty fields (e.g., Savings, Vacation, Emergency, New Car, Roth IRA, Cash) — 6 unique suggestions matching max 6 accounts; suggestion text reserves space (opacity 0) when field has input to prevent layout jump
 - Onboarding: placeholder text "Name" (not "Account name"), input spacing 15pt, "＋ Add another" in muted blue
 - Onboarding: "Get Started" button uses .controlSize(.regular), 30pt top padding above it, pinned below inputs (no Spacer push)
 - Onboarding: tap outside text fields dismisses keyboard (contentShape + onTapGesture clearing focus)
 - Record sheet: muted blue ringed dot (10pt outer stroke, 5pt inner fill) before "Record date" label — same dot style as Growth chart, ties the sheet to Fundra branding; DatePicker tinted to matching muted blue
+- Text field style (app-wide standard): `.plain` style with manual `RoundedRectangle(cornerRadius: 10)` stroke (secondary 0.3 opacity, 1pt), 12pt horizontal / 8pt vertical padding — use this instead of `.roundedBorder` everywhere
 - Record pre-fills amounts when editing an existing month; shows previous month's values as gray placeholder text for new months
 - Monthly reminder notification: fires on the 1st of every month at 9 AM ("Time to record — update your savings totals in Fundra"). Permission requested once after first Record save, stored in @AppStorage. No settings UI — users manage via iOS Settings if they want to disable.
 - Edit Balance sheet: pencil icon next to account name for inline rename (discoverable path; long-press context menu stays as power-user path); "Done" button turns blue only when name has changed
@@ -76,7 +77,6 @@
 - Growth button: same size/weight as Accounts header (19pt bold); dark mode muted blue (0.43, 0.60, 0.76), light mode deeper blue (0.30, 0.45, 0.60)
 - Screenshot mode: `#if DEBUG` flag in ContentView.swift — seeds data, skips Face ID, no date restriction. Looks exactly like production (no debug overlays). Toggle by setting `screenshotMode = true/false`.
 - Debug mode: `#if DEBUG` flag in ContentView.swift — everything screenshot mode does, plus debug overlays (dark/light toggle). Toggle by setting `debugMode = true/false`.
-- Production mode: both flags false — Face ID required, no seeded data, future dates restricted on DatePicker. App behaves exactly as shipped.
 - Debug mode includes a floating dark/light mode toggle (top-left corner) — single tap switches between dark and light. No need to change Simulator settings.
 
 ## User Preferences
@@ -92,7 +92,6 @@
 - Uses "use my data" to mean `useRealisticData = true`; "use growth data" to mean `useRealisticData = false`
 - Uses "put it in screenshot mode" to mean: set `screenshotMode = true`, `debugMode = false` (always uses growth data regardless of useRealisticData)
 - Uses "put it in debug mode" to mean: set `screenshotMode = false`, `debugMode = true`, don't change useRealisticData
-- Uses "put it in production mode" to mean: set `screenshotMode = false`, `debugMode = false`, and `useRealisticData = true`
 - Occasionally types fast and makes typos — don't correct them, just understand intent
 - Asks "is that normal?" about App Store/Xcode behaviors — give reassurance with context
 - Likes to validate ideas verbally before committing to code

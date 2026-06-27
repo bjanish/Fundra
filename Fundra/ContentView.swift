@@ -262,6 +262,7 @@ struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var accountNames: [String] = ["", "", ""]
     @State private var logoBarHeights: [CGFloat] = [8, 14, 22]
+    @State private var waveOffset: Int = -1
     @FocusState private var focusedField: Int?
     
     var body: some View {
@@ -284,14 +285,22 @@ struct OnboardingView: View {
                 }
                 
                 VStack(spacing: 4) {
-                    Text("Welcome to ")
-                        .font(.title)
-                        .fontWeight(.bold)
-                    + Text("Fundra")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .italic()
-                        .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
+                    let fullText = "Welcome to Fundra"
+                    let fundraStart = 11 // index where "Fundra" begins
+                    HStack(spacing: 0) {
+                        ForEach(Array(fullText.enumerated()), id: \.offset) { index, char in
+                            Text(String(char))
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .italic(index >= fundraStart)
+                                .foregroundColor(index >= fundraStart ? Color(red: 0.43, green: 0.60, blue: 0.76) : .primary)
+                                .offset(y: waveOffset == index ? -10 : 0)
+                                .animation(.easeInOut(duration: 0.25), value: waveOffset)
+                        }
+                    }
+                    .onAppear {
+                        startWave(count: fullText.count)
+                    }
                     
                     Text("Add your savings to get started")
                         .font(.subheadline)
@@ -311,7 +320,13 @@ struct OnboardingView: View {
                                 .foregroundColor(.secondary)
                                 .frame(width: 28)
                             TextField("Name", text: $accountNames[index])
-                                .textFieldStyle(.roundedBorder)
+                                .textFieldStyle(.plain)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                )
                                 .textInputAutocapitalization(.words)
                                 .autocorrectionDisabled()
                                 .onChange(of: accountNames[index]) { _, newValue in
@@ -393,6 +408,18 @@ struct OnboardingView: View {
         for (index, name) in uniqueNames.enumerated() {
             let category = Category(name: name, sortOrder: index)
             modelContext.insert(category)
+        }
+    }
+    
+    private func startWave(count: Int) {
+        for i in 0..<count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.06) {
+                waveOffset = i
+            }
+        }
+        // Reset after wave completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double(count) * 0.06 + 0.25) {
+            waveOffset = -1
         }
     }
     

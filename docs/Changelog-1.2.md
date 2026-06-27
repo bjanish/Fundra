@@ -11,6 +11,8 @@
 8. Onboarding: suggestion text reserves space (opacity 0) when field has input — prevents layout jump
 9. Onboarding: tap outside text fields dismisses keyboard
 10. Onboarding: "Get Started" button pinned 30pt below inputs (no Spacer push to bottom)
+11. Onboarding: wave animation on "Welcome to Fundra" title (letters bounce sequentially on appear)
+12. Onboarding: text fields use custom rounded style (10pt corner radius, plain style with stroke border)
 
 ## Easter Egg / Polish
 8. Export/Save Chart icons animate in sync with title tap (deflate + rebuild)
