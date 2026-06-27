@@ -11,7 +11,7 @@ import Charts
 
 // MARK: - Screenshot Mode (DEBUG only)
 #if DEBUG
-let screenshotMode = false  // Seeds data, skips Face ID, no date restriction — looks like production (for App Store screenshots)
+let screenshotMode = true  // Seeds data, skips Face ID, no date restriction — looks like production (for App Store screenshots)
 let debugMode = false         // Everything screenshot mode does + debug overlays (dark/light toggle, etc.)
 let useRealisticData = true  // true = 6 accounts, 1 month (June); false = 3 accounts, 3 months (growth testing)
 #endif
@@ -361,9 +361,14 @@ struct OnboardingView: View {
                 }
                 
                 if accountNames.count < 6 {
-                    Button("＋ Add another") {
+                    Button {
                         accountNames.append("")
                         focusedField = accountNames.count - 1
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus.circle")
+                            Text("Add another")
+                        }
                     }
                     .font(.callout)
                     .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
