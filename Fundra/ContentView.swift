@@ -1480,7 +1480,17 @@ struct GrowthSummaryView: View {
                         let firstDate = Calendar.current.date(from: DateComponents(year: first.year, month: first.month, day: first.day)) ?? Date()
                         let selectedDate = Calendar.current.date(from: DateComponents(year: selected.year, month: selected.month, day: selected.day)) ?? Date()
                         
-                        Label("\(firstDate, format: .dateTime.month(.wide)) (first recorded)", systemImage: "calendar")
+                        HStack(spacing: 6) {
+                            ZStack {
+                                Circle()
+                                    .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
+                                    .frame(width: 10, height: 10)
+                                Circle()
+                                    .fill(Color(red: 0.43, green: 0.60, blue: 0.76))
+                                    .frame(width: 5, height: 5)
+                            }
+                            Text("\(firstDate, format: .dateTime.month(.wide)) (first recorded)")
+                        }
                             .foregroundColor(.secondary)
                         Text(formatFullAmount(firstTotal))
                             .font(.title2)
@@ -1491,7 +1501,17 @@ struct GrowthSummaryView: View {
                             let priorDate = Calendar.current.date(from: DateComponents(year: priorPeriod.year, month: priorPeriod.month, day: priorPeriod.day)) ?? Date()
                             let monthChange = selectedTotal - priorTotal
                             let monthPct = priorTotal > 0 ? (monthChange / priorTotal) * 100 : 0
-                            Label("\(priorDate, format: .dateTime.month(.wide)) (prior month)", systemImage: "calendar")
+                            HStack(spacing: 6) {
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color(red: 0.54, green: 0.73, blue: 0.63), lineWidth: 1.5)
+                                        .frame(width: 10, height: 10)
+                                    Circle()
+                                        .fill(Color(red: 0.54, green: 0.73, blue: 0.63))
+                                        .frame(width: 5, height: 5)
+                                }
+                                Text("\(priorDate, format: .dateTime.month(.wide)) (prior month)")
+                            }
                                 .foregroundColor(.secondary)
                             HStack(spacing: 6) {
                                 Text(formatFullAmount(priorTotal))
@@ -1504,7 +1524,17 @@ struct GrowthSummaryView: View {
                             }
                         }
                         
-                        Label("\(selectedDate, format: .dateTime.month(.wide)) (current)", systemImage: "calendar")
+                        HStack(spacing: 6) {
+                            ZStack {
+                                Circle()
+                                    .stroke(Color(red: 0.76, green: 0.68, blue: 0.58), lineWidth: 1.5)
+                                    .frame(width: 10, height: 10)
+                                Circle()
+                                    .fill(Color(red: 0.76, green: 0.68, blue: 0.58))
+                                    .frame(width: 5, height: 5)
+                            }
+                            Text("\(selectedDate, format: .dateTime.month(.wide)) (current)")
+                        }
                             .foregroundColor(.secondary)
                         Text(formatFullAmount(selectedTotal))
                             .font(.title2)
