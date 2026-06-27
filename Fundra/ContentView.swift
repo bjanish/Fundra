@@ -333,11 +333,12 @@ struct OnboardingView: View {
                                 .font(.caption)
                                 .foregroundColor(.red)
                                 .padding(.leading, 32)
-                        } else if accountNames[index].isEmpty {
+                        } else {
                             Text(suggestions[index % suggestions.count])
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                                 .padding(.leading, 32)
+                                .opacity(accountNames[index].isEmpty ? 1 : 0)
                         }
                     }
                 }

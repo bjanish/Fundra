@@ -41,7 +41,7 @@
 - Easter egg: tap Fundra title → bars deflate and rebuild with spring animation; Export/Save Chart icons also deflate/rebuild in sync; every 3rd tap triggers confetti (80 particles) + earthquake jiggle (fixed 10-step diagonal pattern, ±6–7pt, rigid haptic bursts)
 - One-time tooltip: "Tip: Long-press an account to rename or delete it." (auto-dismisses after 10s, uses @AppStorage)
 - Onboarding: larger 3-bar icon above title with subtle animated height randomization (staircase shape always preserved — bar ranges: 6–9, 12–16, 19–22; 2s interval, 1.2s easeInOut transitions), "Fundra" in italic muted blue (#6E98C2), subtitle "Add your savings to get started" in secondary
-- Onboarding: account name suggestions below empty fields (e.g., Savings, Vacation, Emergency, New Car, Roth IRA, Cash) — 6 unique suggestions matching max 6 accounts
+- Onboarding: account name suggestions below empty fields (e.g., Savings, Vacation, Emergency, New Car, Roth IRA, Cash) — 6 unique suggestions matching max 6 accounts; suggestion text reserves space (opacity 0) when field has input to prevent layout jump
 - Onboarding: placeholder text "Name" (not "Account name"), input spacing 15pt, "＋ Add another" in muted blue
 - Onboarding: "Get Started" button uses .controlSize(.regular), 24pt top padding above it
 - Record sheet: muted blue ringed dot (10pt outer stroke, 5pt inner fill) before "Record date" label — same dot style as Growth chart, ties the sheet to Fundra branding; DatePicker tinted to matching muted blue

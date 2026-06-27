@@ -8,6 +8,7 @@
 5. Onboarding: input field spacing increased (12pt → 15pt)
 6. Onboarding: "Get Started" button resized from .large to .regular, 24pt top padding
 7. Onboarding: logo bar chart animates with subtle random height changes (staircase shape preserved)
+8. Onboarding: suggestion text reserves space (opacity 0) when field has input — prevents layout jump
 
 ## Easter Egg / Polish
 8. Export/Save Chart icons animate in sync with title tap (deflate + rebuild)
