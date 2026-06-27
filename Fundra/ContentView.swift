@@ -1261,7 +1261,6 @@ struct RecordMonthView: View {
                             }
                         }
                             .datePickerStyle(.compact)
-                            .tint(Color(red: 0.43, green: 0.60, blue: 0.76))
                             .padding(.leading, 4)
                     } else {
                         DatePicker(selection: $selectedDate, in: ...Date(), displayedComponents: .date) {
@@ -1278,7 +1277,6 @@ struct RecordMonthView: View {
                             }
                         }
                             .datePickerStyle(.compact)
-                            .tint(Color(red: 0.43, green: 0.60, blue: 0.76))
                             .padding(.leading, 4)
                     }
                     #else
@@ -1296,7 +1294,6 @@ struct RecordMonthView: View {
                         }
                     }
                         .datePickerStyle(.compact)
-                        .tint(Color(red: 0.43, green: 0.60, blue: 0.76))
                         .padding(.leading, 4)
                     #endif
                     Text("One entry per month. Recording again will update that month.")

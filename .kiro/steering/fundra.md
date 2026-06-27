@@ -44,7 +44,7 @@
 - Onboarding: account name suggestions below empty fields (e.g., Savings, Vacation, Emergency, New Car, Roth IRA, Cash) — 6 unique suggestions matching max 6 accounts
 - Onboarding: placeholder text "Name" (not "Account name"), input spacing 15pt, "＋ Add another" in muted blue
 - Onboarding: "Get Started" button uses .controlSize(.regular), 24pt top padding above it
-- Record sheet: muted blue ringed dot (10pt outer stroke, 5pt inner fill) before "Record date" label — same dot style as Growth chart, ties the sheet to Fundra branding; DatePicker tinted to matching muted blue (cohesive with dot)
+- Record sheet: muted blue ringed dot (10pt outer stroke, 5pt inner fill) before "Record date" label — same dot style as Growth chart, ties the sheet to Fundra branding
 - Record pre-fills amounts when editing an existing month; shows previous month's values as gray placeholder text for new months
 - Monthly reminder notification: fires on the 1st of every month at 9 AM ("Time to record — update your savings totals in Fundra"). Permission requested once after first Record save, stored in @AppStorage. No settings UI — users manage via iOS Settings if they want to disable.
 - Edit Balance sheet: pencil icon next to account name for inline rename (discoverable path; long-press context menu stays as power-user path); "Done" button turns blue only when name has changed
