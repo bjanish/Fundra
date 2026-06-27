@@ -1815,6 +1815,7 @@ struct EditBalanceView: View {
     @State private var amountText: String = ""
     @State private var isRenaming = false
     @State private var renameText: String = ""
+    @FocusState private var renameFieldFocused: Bool
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     
     private var isDuplicateName: Bool {
@@ -1837,7 +1838,15 @@ struct EditBalanceView: View {
                             HStack {
                                 TextField("Account name", text: $renameText)
                                     .font(.body)
+                                    .textFieldStyle(.plain)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                    )
                                     .autocorrectionDisabled()
+                                    .focused($renameFieldFocused)
                                     .onChange(of: renameText) { _, newValue in
                                         if newValue.count > 15 { renameText = String(newValue.prefix(15)) }
                                     }
@@ -1870,6 +1879,9 @@ struct EditBalanceView: View {
                             Button {
                                 renameText = balance.category?.name ?? ""
                                 isRenaming = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    renameFieldFocused = true
+                                }
                             } label: {
                                 Image(systemName: "pencil")
                                     .font(.caption)

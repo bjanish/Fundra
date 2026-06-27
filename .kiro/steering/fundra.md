@@ -116,6 +116,7 @@
 - ~~Submit to App Store~~ ✅ Submitted via Xcode Cloud (Xcode 26.5 RC)
 - ~~Submit v1.1~~ ✅ Submitted for review
 - ~~Submit v1.1.1~~ ✅ Live on App Store
+- ~~Submit v1.2~~ ✅ Live on App Store
 
 ## Deployment
 - GitHub repo: github.com/bjanish/Fundra (private)
