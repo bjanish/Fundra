@@ -11,7 +11,7 @@ import Charts
 
 // MARK: - Screenshot Mode (DEBUG only)
 #if DEBUG
-let screenshotMode = true  // Seeds data, skips Face ID, no date restriction — looks like production (for App Store screenshots)
+let screenshotMode = false  // Seeds data, skips Face ID, no date restriction — looks like production (for App Store screenshots)
 let debugMode = false         // Everything screenshot mode does + debug overlays (dark/light toggle, etc.)
 let useRealisticData = true  // true = 6 accounts, 1 month (June); false = 3 accounts, 3 months (growth testing)
 #endif
@@ -389,7 +389,9 @@ struct OnboardingView: View {
         }
         .ignoresSafeArea(.keyboard)
         .onAppear {
-            focusedField = 0
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.27) {
+                focusedField = 0
+            }
         }
     }
     
