@@ -1527,9 +1527,62 @@ struct GrowthSummaryView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
                 if periods.count < 2 {
-                    Text("Record another month to see growth.")
-                        .foregroundColor(.secondary)
-                        .padding()
+                    VStack(spacing: 16) {
+                        Text("Record each month to track your\nsavings growth over time.")
+                            .foregroundColor(.secondary)
+                            .font(.subheadline)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        
+                        // Sample preview chart
+                        Chart {
+                            let sampleData: [(String, Double)] = [
+                                ("Jan", 4200),
+                                ("Feb", 4800),
+                                ("Mar", 5500),
+                                ("Apr", 6400)
+                            ]
+                            ForEach(sampleData, id: \.0) { month, amount in
+                                LineMark(
+                                    x: .value("Month", month),
+                                    y: .value("Total", amount)
+                                )
+                                .foregroundStyle(moneyGreen.opacity(0.4))
+                                .interpolationMethod(.catmullRom)
+                                
+                                AreaMark(
+                                    x: .value("Month", month),
+                                    y: .value("Total", amount)
+                                )
+                                .foregroundStyle(moneyGreen.opacity(0.08))
+                                .interpolationMethod(.catmullRom)
+                                
+                                PointMark(
+                                    x: .value("Month", month),
+                                    y: .value("Total", amount)
+                                )
+                                .foregroundStyle(Color(red: 0.75, green: 0.65, blue: 0.38))
+                                .symbolSize(40)
+                            }
+                        }
+                        .chartYAxis(.hidden)
+                        .chartXAxis {
+                            AxisMarks(values: .automatic) { _ in
+                                AxisValueLabel()
+                                    .font(.caption)
+                                    .foregroundStyle(Color(red: 0.75, green: 0.65, blue: 0.38))
+                            }
+                        }
+                        .frame(height: 160)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 60)
+                        .opacity(0.5)
+                        
+                        Text("Sample data — yours will appear here")
+                            .font(.caption)
+                            .foregroundColor(.secondary.opacity(0.6))
+                    }
+                    .padding(.top, 24)
                 } else if let selected = selectedPeriod {
                     let first = periods.first!
                     

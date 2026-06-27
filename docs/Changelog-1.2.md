@@ -19,6 +19,7 @@
 9. Confetti doubled (80 particles)
 10. Record sheet: muted blue ringed dot before "Record date" label (matches Growth chart dot style)
 11. Record sheet: DatePicker tinted to Fundra muted blue
+12. Growth Summary: sample preview chart (4 months, gold dots, dimmed) shown when only 1 month recorded — fills empty state with a teaser
 
 ## Developer-Only
 10. MiniBarChartIcon: added `animating` parameter for deflate/rebuild support
