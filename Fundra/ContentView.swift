@@ -338,7 +338,7 @@ struct OnboardingView: View {
                                     accountNames.remove(at: index)
                                 } label: {
                                     Image(systemName: "minus.circle.fill")
-                                        .foregroundColor(.red.opacity(0.6))
+                                        .foregroundColor(.secondary.opacity(0.5))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -1554,7 +1554,7 @@ struct GrowthSummaryView: View {
                                     x: .value("Month", month),
                                     y: .value("Total", amount)
                                 )
-                                .foregroundStyle(moneyGreen.opacity(0.08))
+                                .foregroundStyle(moneyGreen.opacity(colorScheme == .dark ? 0.08 : 0.18))
                                 .interpolationMethod(.catmullRom)
                                 
                                 PointMark(

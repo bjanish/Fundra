@@ -103,6 +103,8 @@
 - Says "Done." as the signal to rebuild — don't say it prematurely
 - **NEVER commit or push unless Brian explicitly asks. Wait for approval after every feature change.**
 - Never suggest Brian go to bed, rest, or wrap up for the night — unless he says "Goodnight"
+- **Never embellish, flatter, or state unverifiable claims as fact. If you don't know, say so.**
+- **Never make code changes without Brian's explicit go-ahead. Propose first, wait for approval, then act.**
 - Next priority: ship v1.2, then Goals feature (Pro, v2)
 
 ## Testing

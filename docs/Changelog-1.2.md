@@ -20,6 +20,8 @@
 10. Record sheet: muted blue ringed dot before "Record date" label (matches Growth chart dot style)
 11. Record sheet: DatePicker tinted to Fundra muted blue
 12. Growth Summary: sample preview chart (4 months, gold dots, dimmed) shown when only 1 month recorded — fills empty state with a teaser
+13. Onboarding: remove button softened from red to muted gray (secondary 0.5 opacity)
+14. Growth sample chart: area fill bumped to 0.18 in light mode for more visibility (dark stays 0.08)
 
 ## Developer-Only
 10. MiniBarChartIcon: added `animating` parameter for deflate/rebuild support
