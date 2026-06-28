@@ -154,8 +154,10 @@
 ## App Store Performance
 - Launched: June 23, 2026
 - 16 first-time downloads in first 3 days (organic, no paid marketing)
-- 7.46% conversion rate (well above ~2-4% App Store average)
+- 7.46% conversion rate (below App Store average of 25-33%, but reasonable for niche privacy-focused utility with no reviews)
 - 454 impressions, 70 product page views
+- Name proximity advantage: "Fundro" (iOS expense tracker) and "Fundra" (Android finance app) exist — spillover searches from similar names drive free discovery
+- "Tundra" autocorrect issue in App Store search — Apple's algorithm sometimes redirects "Fundra" to "Tundra" results due to Toyota Tundra search volume. Expected to resolve as download count grows.
 
 ### Version 2 (Pro)
 - Locale-aware currency formatting (use device locale, replace all hardcoded `$`) — do this FIRST before Goals
