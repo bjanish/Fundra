@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import Charts
+import StoreKit
 
 // MARK: - Screenshot Mode (DEBUG only)
 #if DEBUG
@@ -1274,6 +1275,8 @@ struct RecordMonthView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     @AppStorage("hasAskedNotificationPermission") private var hasAskedNotification = false
+    @AppStorage("reviewPromptedAt3") private var reviewPromptedAt3 = false
+    @AppStorage("reviewPromptedAt6") private var reviewPromptedAt6 = false
     
     @State private var selectedDate = Date()
     @State private var amounts: [String] = []
@@ -1523,6 +1526,23 @@ struct RecordMonthView: View {
         
         try? modelContext.save()
         
+        // Request review based on unique months recorded
+        let allBalancesDescriptor = FetchDescriptor<Balance>()
+        if let allBalances = try? modelContext.fetch(allBalancesDescriptor) {
+            let uniqueMonths = Set(allBalances.map { "\($0.year)-\($0.month)" }).count
+            if uniqueMonths >= 3 && !reviewPromptedAt3 {
+                reviewPromptedAt3 = true
+                if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+                    SKStoreReviewController.requestReview(in: scene)
+                }
+            } else if uniqueMonths >= 6 && !reviewPromptedAt6 {
+                reviewPromptedAt6 = true
+                if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+                    SKStoreReviewController.requestReview(in: scene)
+                }
+            }
+        }
+        
         // Request notification permission after first successful Record
         if !hasAskedNotification {
             hasAskedNotification = true
@@ -1613,9 +1633,62 @@ struct GrowthSummaryView: View {
                     let first = periods.first!
                     
                     if selected.year == first.year && selected.month == first.month {
-                        Text("Close and swipe to a later month to see growth.")
-                            .foregroundColor(.secondary)
-                            .padding()
+                        VStack(spacing: 16) {
+                            Text("Swipe to a later month to\nsee your growth over time.")
+                                .foregroundColor(.secondary)
+                                .font(.subheadline)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                            
+                            // Sample preview chart
+                            Chart {
+                                let sampleData: [(String, Double)] = [
+                                    ("Jan", 4200),
+                                    ("Feb", 4800),
+                                    ("Mar", 5500),
+                                    ("Apr", 6400)
+                                ]
+                                ForEach(sampleData, id: \.0) { month, amount in
+                                    LineMark(
+                                        x: .value("Month", month),
+                                        y: .value("Total", amount)
+                                    )
+                                    .foregroundStyle(moneyGreen.opacity(0.4))
+                                    .interpolationMethod(.catmullRom)
+                                    
+                                    AreaMark(
+                                        x: .value("Month", month),
+                                        y: .value("Total", amount)
+                                    )
+                                    .foregroundStyle(moneyGreen.opacity(colorScheme == .dark ? 0.08 : 0.18))
+                                    .interpolationMethod(.catmullRom)
+                                    
+                                    PointMark(
+                                        x: .value("Month", month),
+                                        y: .value("Total", amount)
+                                    )
+                                    .foregroundStyle(Color(red: 0.75, green: 0.65, blue: 0.38))
+                                    .symbolSize(40)
+                                }
+                            }
+                            .chartYAxis(.hidden)
+                            .chartXAxis {
+                                AxisMarks(values: .automatic) { _ in
+                                    AxisValueLabel()
+                                        .font(.caption)
+                                        .foregroundStyle(Color(red: 0.75, green: 0.65, blue: 0.38))
+                                }
+                            }
+                            .frame(height: 160)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 60)
+                            .opacity(0.5)
+                            
+                            Text("Sample data — yours will appear here")
+                                .font(.caption)
+                                .foregroundColor(.secondary.opacity(0.6))
+                        }
+                        .padding(.top, 24)
                     } else {
                     let firstTotal = total(year: first.year, month: first.month)
                     let selectedTotal = total(year: selected.year, month: selected.month)
