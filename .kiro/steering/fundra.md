@@ -10,7 +10,12 @@
 - Single file: ContentView.swift (all views)
 - Models: Category and Balance (in Item.swift)
 - Face ID/Touch ID lock on launch (FundraApp.swift)
-- Docs and non-code files live in `docs/` folder
+- Docs and non-code files live in `docs/` folder, organized by purpose:
+  - `docs/releases/` — changelogs and What's New text per version
+  - `docs/app-store/` — App Store listing, screenshots, privacy policy, mockup
+  - `docs/specs/` — feature specs and design docs
+  - `docs/deployment/` — Xcode Cloud submission and deployment guides
+  - `docs/other-apps/` — Card app, backgammon, and other project ideas
 - Project uses no external dependencies (pure Apple frameworks)
 
 ## Design Decisions
@@ -98,7 +103,7 @@
 - Likes to validate ideas verbally before committing to code
 - Appreciates when I explain *why* something works, not just *how*
 - Will say "update steering" as a reminder, but prefers I do it proactively for design changes
-- When updating steering, also update the relevant changelog (e.g., `docs/Changelog-1.2.md`) with a matching entry
+- When updating steering, also update the relevant changelog (e.g., `docs/releases/Changelog-1.2.md`) with a matching entry
 - Conversational style: casual, curious, asks good follow-up questions
 - Says "Done." as the signal to rebuild — don't say it prematurely
 - **NEVER commit or push unless Brian explicitly asks. Wait for approval after every feature change.**
@@ -106,6 +111,7 @@
 - **Never embellish, flatter, or state unverifiable claims as fact. If you don't know, say so.**
 - **Never make code changes without Brian's explicit go-ahead. Propose first, wait for approval, then act.**
 - Next priority: ship v1.2, then Goals feature (Pro, v2)
+- Project roadmap: Fundra v2.0 (Goals + Pro IAP) → Card app → Mini Backgammon (passion project)
 
 ## Testing
 - Unit tests exist in FundraTests for: filterAmountInput, abbreviatedAmount, formatFullAmount
@@ -122,11 +128,11 @@
 - GitHub repo: github.com/bjanish/Fundra (private)
 - Xcode Cloud workflow: "Release" — Archive + App Store Connect distribution; manual start only (auto-trigger disabled via custom rule)
 - Xcode version for builds: Xcode 26.5 RC (required — project format downgraded to objectVersion 70 for compatibility)
-- Release checklist lives in `docs/XcodeCloudSubmission.md` (includes "Releasing an Update" section)
-- Screenshot framing tool: appshots.appstore.xyz; captions/colors in `docs/ScreenshotCaptions.md`
+- Release checklist lives in `docs/deployment/XcodeCloudSubmission.md` (includes "Releasing an Update" section)
+- Screenshot framing tool: appshots.appstore.xyz; captions/colors in `docs/app-store/ScreenshotCaptions.md`
 - Current App Store status: v1.1.1 live (v1.0 also available)
-- v1.1 changes tracked in `docs/Changelog-1.1.md`
-- v1.2 changes tracked in `docs/Changelog-1.2.md`
+- v1.1 changes tracked in `docs/releases/Changelog-1.1.md`
+- v1.2 changes tracked in `docs/releases/Changelog-1.2.md`
 - Next version: 1.2 (onboarding polish, ready to submit), then 2.0 (Goals feature, Pro tier) — use `git checkout -b v2.0` to start
 - Manual release preferred for future submissions (gives window to reject before going live)
 - Screenshot mode seeds Record date to Apr 15, 2026 for neutral date display

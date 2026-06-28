@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fundra App Store Screenshot Mockup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #1a1a1a;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    }
+
+    .screenshot-frame {
+      width: 400px;
+      height: 867px;
+      /* 6.7" ratio approx */
+      background: linear-gradient(165deg, #385C57 0%, #2a4a45 60%, #6E98C2 100%);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 32px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle decorative circle */
+    .screenshot-frame::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 260px;
+      height: 260px;
+      background: rgba(110, 152, 194, 0.15);
+      border-radius: 50%;
+    }
+
+    .caption {
+      color: #ffffff;
+      font-size: 28px;
+      font-weight: 600;
+      text-align: center;
+      letter-spacing: -0.3px;
+      margin-bottom: 32px;
+      z-index: 1;
+    }
+
+    .device {
+      width: 280px;
+      height: 600px;
+      background: #000;
+      border-radius: 40px;
+      padding: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      z-index: 1;
+    }
+
+    .device-screen {
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      border-radius: 30px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Simulated app content */
+    .status-bar {
+      height: 44px;
+      background: #fafafa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+    }
+
+    .status-bar span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .app-header {
+      padding: 12px 20px 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-header .icon {
+      width: 20px;
+      height: 16px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .app-header .icon .bar {
+      width: 4px;
+      background: #6E98C2;
+      border-radius: 2px;
+    }
+
+    .app-header .icon .bar:nth-child(1) {
+      height: 6px;
+    }
+
+    .app-header .icon .bar:nth-child(2) {
+      height: 11px;
+    }
+
+    .app-header .icon .bar:nth-child(3) {
+      height: 16px;
+    }
+
+    .app-header .icon .bar:nth-child(4) {
+      height: 9px;
+    }
+
+    .app-header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .chart-area {
+      padding: 16px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart {
+      height: 180px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 20px 0;
+    }
+
+    .chart-bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chart-bar {
+      width: 100%;
+      max-width: 32px;
+      min-height: 20px;
+      background: #385C57;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .chart-label {
+      font-size: 9px;
+      color: #888;
+      font-weight: 500;
+    }
+
+    .accounts-section {
+      padding: 12px 20px 20px;
+    }
+
+    .accounts-header {
+      font-size: 13px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    .account-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .account-name {
+      font-size: 14px;
+      color: #595959;
+      font-weight: 500;
+    }
+
+    .account-balance {
+      font-size: 14px;
+      color: #385C57;
+      font-weight: 600;
+    }
+
+    /* Footer label */
+    .footer-note {
+      margin-top: 16px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 12px;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="screenshot-frame">
+    <div class="caption">Your savings at a glance</div>
+
+    <div class="device">
+      <div class="device-screen">
+        <div class="status-bar"><span>9:41</span></div>
+
+        <div class="app-header">
+          <div class="icon">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+          <h1>Fundra</h1>
+        </div>
+
+        <div class="chart-area">
+          <div class="chart">
+            <div class="chart-bar-group">
+              <div class="chart-bar" style="height: 70px"></div>
+              <span class="chart-label">Jan</span>
+            </div>
+            <div class="chart-bar-group">
+              <div class="chart-bar" style="height: 85px"></div>
+              <span class="chart-label">Feb</span>
+            </div>
+            <div class="chart-bar-group">
+              <div class="chart-bar" style="height: 100px"></div>
+              <span class="chart-label">Mar</span>
+            </div>
+            <div class="chart-bar-group">
+              <div class="chart-bar" style="height: 90px"></div>
+              <span class="chart-label">Apr</span>
+            </div>
+            <div class="chart-bar-group">
+              <div class="chart-bar" style="height: 120px"></div>
+              <span class="chart-label">May</span>
+            </div>
+            <div class="chart-bar-group">
+              <div class="chart-bar" style="height: 145px"></div>
+              <span class="chart-label">Jun</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="accounts-section">
+          <div class="accounts-header">Accounts</div>
+          <div class="account-row">
+            <span class="account-name">Emergency</span>
+            <span class="account-balance">$2,450</span>
+          </div>
+          <div class="account-row">
+            <span class="account-name">Vacation</span>
+            <span class="account-balance">$3,120</span>
+          </div>
+          <div class="account-row">
+            <span class="account-name">New Car</span>
+            <span class="account-balance">$8,750</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">Fundra — Privacy-first savings tracker</div>
+  </div>
+</body>
+
+</html>
