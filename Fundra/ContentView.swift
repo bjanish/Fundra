@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import Charts
 import StoreKit
+import WidgetKit
 
 // MARK: - Screenshot Mode (DEBUG only)
 #if DEBUG
@@ -1550,6 +1551,7 @@ struct RecordMonthView: View {
         }
         
         UINotificationFeedbackGenerator().notificationOccurred(.success)
+        WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
 }

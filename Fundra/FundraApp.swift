@@ -20,7 +20,29 @@ struct FundraApp: App {
             Category.self,
             Balance.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.fundra.shared")!
+        let storeURL = groupURL.appending(path: "Fundra.store")
+        
+        // Migrate existing data to shared container on first launch
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: storeURL.path) {
+            // Check for existing default store
+            let defaultStoreURL = URL.applicationSupportDirectory.appending(path: "default.store")
+            if fileManager.fileExists(atPath: defaultStoreURL.path) {
+                try? fileManager.copyItem(at: defaultStoreURL, to: storeURL)
+                // Also copy the WAL and SHM files if they exist
+                let walURL = defaultStoreURL.appendingPathExtension("wal")
+                let shmURL = defaultStoreURL.appendingPathExtension("shm")
+                if fileManager.fileExists(atPath: walURL.path) {
+                    try? fileManager.copyItem(at: walURL, to: storeURL.appendingPathExtension("wal"))
+                }
+                if fileManager.fileExists(atPath: shmURL.path) {
+                    try? fileManager.copyItem(at: shmURL, to: storeURL.appendingPathExtension("shm"))
+                }
+            }
+        }
+        
+        let modelConfiguration = ModelConfiguration(schema: schema, url: storeURL)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

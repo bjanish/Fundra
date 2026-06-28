@@ -6,7 +6,20 @@
 	objectVersion = 70;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FF11F05A2FF1093D00F53071 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF11F0592FF1093D00F53071 /* WidgetKit.framework */; };
+		FF11F05C2FF1093D00F53071 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FF11F05B2FF1093D00F53071 /* SwiftUI.framework */; };
+		FF11F0692FF1093F00F53071 /* FundraWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FF11F0572FF1093D00F53071 /* FundraWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		FF11F0672FF1093F00F53071 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FF875E622FDA23CC002D0F77 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FF11F0562FF1093D00F53071;
+			remoteInfo = FundraWidgetExtension;
+		};
 		FF875E7A2FDA23CD002D0F77 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FF875E622FDA23CC002D0F77 /* Project object */;
@@ -23,13 +36,52 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		FF11F06A2FF1093F00F53071 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				FF11F0692FF1093F00F53071 /* FundraWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		FF11F0572FF1093D00F53071 /* FundraWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FundraWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FF11F0592FF1093D00F53071 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		FF11F05B2FF1093D00F53071 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		FF11F0882FF10BC700F53071 /* FundraWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FundraWidgetExtension.entitlements; sourceTree = "<group>"; };
 		FF875E6A2FDA23CC002D0F77 /* Fundra.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fundra.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FF875E792FDA23CD002D0F77 /* FundraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FundraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FF875E832FDA23CD002D0F77 /* FundraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FundraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FF11F06D2FF1093F00F53071 /* Exceptions for "FundraWidget" folder in "FundraWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FF11F0562FF1093D00F53071 /* FundraWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		FF11F05D2FF1093D00F53071 /* FundraWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FF11F06D2FF1093F00F53071 /* Exceptions for "FundraWidget" folder in "FundraWidgetExtension" target */,
+			);
+			path = FundraWidget;
+			sourceTree = "<group>";
+		};
+		FF11F0772FF10B6700F53071 /* FundraWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FundraWidget;
+			sourceTree = "<group>";
+		};
 		FF875E6C2FDA23CC002D0F77 /* Fundra */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Fundra;
@@ -48,6 +100,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		FF11F0542FF1093D00F53071 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				FF11F05C2FF1093D00F53071 /* SwiftUI.framework in Frameworks */,
+				FF11F05A2FF1093D00F53071 /* WidgetKit.framework in Frameworks */,
+			);
+		};
 		FF875E672FDA23CC002D0F77 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -66,12 +125,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FF11F0582FF1093D00F53071 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FF11F0592FF1093D00F53071 /* WidgetKit.framework */,
+				FF11F05B2FF1093D00F53071 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		FF875E612FDA23CC002D0F77 = {
 			isa = PBXGroup;
 			children = (
+				FF11F0882FF10BC700F53071 /* FundraWidgetExtension.entitlements */,
 				FF875E6C2FDA23CC002D0F77 /* Fundra */,
 				FF875E7C2FDA23CD002D0F77 /* FundraTests */,
 				FF875E862FDA23CD002D0F77 /* FundraUITests */,
+				FF11F05D2FF1093D00F53071 /* FundraWidget */,
+				FF11F0772FF10B6700F53071 /* FundraWidget */,
+				FF11F0582FF1093D00F53071 /* Frameworks */,
 				FF875E6B2FDA23CC002D0F77 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -82,6 +154,7 @@
 				FF875E6A2FDA23CC002D0F77 /* Fundra.app */,
 				FF875E792FDA23CD002D0F77 /* FundraTests.xctest */,
 				FF875E832FDA23CD002D0F77 /* FundraUITests.xctest */,
+				FF11F0572FF1093D00F53071 /* FundraWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -89,6 +162,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		FF11F0562FF1093D00F53071 /* FundraWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF11F06E2FF1093F00F53071 /* Build configuration list for PBXNativeTarget "FundraWidgetExtension" */;
+			buildPhases = (
+				FF11F0532FF1093D00F53071 /* Sources */,
+				FF11F0542FF1093D00F53071 /* Frameworks */,
+				FF11F0552FF1093D00F53071 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				FF11F05D2FF1093D00F53071 /* FundraWidget */,
+			);
+			name = FundraWidgetExtension;
+			productName = FundraWidgetExtension;
+			productReference = FF11F0572FF1093D00F53071 /* FundraWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		FF875E692FDA23CC002D0F77 /* Fundra */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FF875E8B2FDA23CD002D0F77 /* Build configuration list for PBXNativeTarget "Fundra" */;
@@ -96,8 +187,12 @@
 				FF875E662FDA23CC002D0F77 /* Sources */,
 				FF875E672FDA23CC002D0F77 /* Frameworks */,
 				FF875E682FDA23CC002D0F77 /* Resources */,
+				FF11F06A2FF1093F00F53071 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				FF11F0682FF1093F00F53071 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				FF875E6C2FDA23CC002D0F77 /* Fundra */,
@@ -159,6 +254,9 @@
 				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					FF11F0562FF1093D00F53071 = {
+						CreatedOnToolsVersion = 27.0;
+					};
 					FF875E692FDA23CC002D0F77 = {
 						CreatedOnToolsVersion = 27.0;
 					};
@@ -189,11 +287,17 @@
 				FF875E692FDA23CC002D0F77 /* Fundra */,
 				FF875E782FDA23CD002D0F77 /* FundraTests */,
 				FF875E822FDA23CD002D0F77 /* FundraUITests */,
+				FF11F0562FF1093D00F53071 /* FundraWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		FF11F0552FF1093D00F53071 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 		FF875E682FDA23CC002D0F77 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -212,6 +316,11 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		FF11F0532FF1093D00F53071 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		FF875E662FDA23CC002D0F77 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -230,6 +339,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		FF11F0682FF1093F00F53071 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FF11F0562FF1093D00F53071 /* FundraWidgetExtension */;
+			targetProxy = FF11F0672FF1093F00F53071 /* PBXContainerItemProxy */;
+		};
 		FF875E7B2FDA23CD002D0F77 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = FF875E692FDA23CC002D0F77 /* Fundra */;
@@ -243,6 +357,75 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		FF11F06B2FF1093F00F53071 /* Debug configuration for PBXNativeTarget "FundraWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = FundraWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 33;
+				DEVELOPMENT_TEAM = 2P7S7U7G2G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FundraWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FundraWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fundra.app.Fundra.FundraWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FF11F06C2FF1093F00F53071 /* Release configuration for PBXNativeTarget "FundraWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = FundraWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 33;
+				DEVELOPMENT_TEAM = 2P7S7U7G2G;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FundraWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FundraWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fundra.app.Fundra.FundraWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		FF875E892FDA23CD002D0F77 /* Debug configuration for PBXProject "Fundra" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -364,6 +547,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Fundra/Fundra.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = 2P7S7U7G2G;
@@ -410,6 +594,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Fundra/Fundra.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 33;
 				DEVELOPMENT_TEAM = 2P7S7U7G2G;
@@ -557,6 +742,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		FF11F06E2FF1093F00F53071 /* Build configuration list for PBXNativeTarget "FundraWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FF11F06B2FF1093F00F53071 /* Debug configuration for PBXNativeTarget "FundraWidgetExtension" */,
+				FF11F06C2FF1093F00F53071 /* Release configuration for PBXNativeTarget "FundraWidgetExtension" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		FF875E652FDA23CC002D0F77 /* Build configuration list for PBXProject "Fundra" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
