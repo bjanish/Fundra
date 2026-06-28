@@ -143,15 +143,18 @@ struct FundraEntry: TimelineEntry {
 struct FundraWidgetEntryView: View {
     var entry: Provider.Entry
     @Environment(\.widgetFamily) var family
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
-        switch family {
-        case .systemSmall:
-            smallWidget
-        case .systemMedium:
-            mediumWidget
-        default:
-            smallWidget
+        Group {
+            switch family {
+            case .systemSmall:
+                smallWidget
+            case .systemMedium:
+                mediumWidget
+            default:
+                smallWidget
+            }
         }
     }
     
@@ -186,7 +189,7 @@ struct FundraWidgetEntryView: View {
                 
                 Text(entry.lastRecordedMonth)
                     .font(.caption2)
-                    .foregroundColor(Color(white: 0.7))
+                    .foregroundColor(colorScheme == .dark ? Color(white: 0.7) : Color(white: 0.4))
             } else {
                 Text("Add accounts\nto get started")
                     .font(.caption)
@@ -226,7 +229,7 @@ struct FundraWidgetEntryView: View {
                     
                     Text("Total savings • \(entry.lastRecordedMonth)")
                         .font(.caption2)
-                        .foregroundColor(Color(white: 0.7))
+                        .foregroundColor(colorScheme == .dark ? Color(white: 0.7) : Color(white: 0.4))
                 } else {
                     Text("Add accounts to get started")
                         .font(.caption)
@@ -240,6 +243,18 @@ struct FundraWidgetEntryView: View {
     }
 }
 
+// MARK: - Widget Background
+
+struct WidgetBackground: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        colorScheme == .dark
+            ? Color(red: 0.11, green: 0.11, blue: 0.12)
+            : Color.white
+    }
+}
+
 // MARK: - Widget Configuration
 
 struct FundraWidget: Widget {
@@ -249,7 +264,7 @@ struct FundraWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             FundraWidgetEntryView(entry: entry)
                 .containerBackground(for: .widget) {
-                    Color(red: 0.11, green: 0.11, blue: 0.12)
+                    WidgetBackground()
                 }
         }
         .configurationDisplayName("Fundra")
