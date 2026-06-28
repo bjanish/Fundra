@@ -198,8 +198,7 @@ struct FundraWidgetEntryView: View {
     
     var mediumWidget: some View {
         HStack {
-            // Left side — same as small
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 4) {
                     HStack(alignment: .bottom, spacing: 1.5) {
                         RoundedRectangle(cornerRadius: 1)
@@ -218,8 +217,6 @@ struct FundraWidgetEntryView: View {
                         .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
                 }
                 
-                Spacer()
-                
                 if entry.accountCount > 0 {
                     Text(formatFullAmount(entry.totalSavings))
                         .font(.system(size: 28, weight: .bold))
@@ -229,7 +226,7 @@ struct FundraWidgetEntryView: View {
                     
                     Text("Total savings • \(entry.lastRecordedMonth)")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(white: 0.7))
                 } else {
                     Text("Add accounts to get started")
                         .font(.caption)
@@ -239,7 +236,7 @@ struct FundraWidgetEntryView: View {
             
             Spacer()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
