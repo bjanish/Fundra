@@ -171,7 +171,7 @@ struct FundraWidgetEntryView: View {
                         .frame(width: 3, height: 13)
                 }
                 Text("Fundra")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
                     .italic()
                     .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
             }
