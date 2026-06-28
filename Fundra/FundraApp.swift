@@ -63,9 +63,26 @@ struct LockScreenView: View {
                     .font(.system(size: 48))
                     .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
                 
-                Text("Fundra")
-                    .font(.title)
-                    .fontWeight(.bold)
+                HStack(alignment: .center, spacing: 4) {
+                    HStack(alignment: .bottom, spacing: 2) {
+                        ForEach(0..<3, id: \.self) { index in
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill([
+                                    Color(red: 0.43, green: 0.60, blue: 0.76),
+                                    Color(red: 0.54, green: 0.73, blue: 0.63),
+                                    Color(red: 0.76, green: 0.68, blue: 0.58),
+                                ][index])
+                                .frame(width: 4, height: [6, 10, 16][index])
+                        }
+                    }
+                    .frame(width: 16, height: 16)
+                    
+                    Text("Fundra")
+                        .font(.system(size: 28, weight: .bold))
+                        .italic()
+                        .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
+                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                }
                 
                 if authFailed {
                     Text("Authenticate to continue")

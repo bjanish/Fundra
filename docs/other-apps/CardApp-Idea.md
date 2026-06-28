@@ -67,6 +67,7 @@ A "drawing straws" app using playing cards. Each person opens the app, draws a r
 - Digital merch that costs nothing to produce
 - Acts as both reward and in-game flex
 - Could be the monetization hook too — sell premium skins to individuals
+- **User-uploaded card backs:** allow users to pick an image from their photo library as a custom card back (crop to card aspect ratio, stored locally). Personal photos, team logos, inside jokes — makes the game theirs.
 
 ### Content & Social
 - TikTok clips of friend groups playing and reacting — reactions sell party games
