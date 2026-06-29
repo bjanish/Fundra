@@ -1202,8 +1202,9 @@ struct MainView: View {
     @ViewBuilder
     private var chartForExport: some View {
         VStack(spacing: 4) {
-            // Branding — top left
+            // Branding — top right
             HStack {
+                Spacer()
                 HStack(spacing: 3) {
                     HStack(alignment: .bottom, spacing: 1) {
                         RoundedRectangle(cornerRadius: 1)
@@ -1221,7 +1222,6 @@ struct MainView: View {
                         .italic()
                         .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
                 }
-                Spacer()
             }
             .padding(.bottom, 8)
             

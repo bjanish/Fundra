@@ -42,6 +42,7 @@
 - Long-press context menu on account rows for Rename/Delete
 - Long-press date to delete month (triggers heavy haptic feedback + confirmation alert)
 - Export/Save Chart positioned below the chart (not in account list)
+- Exported chart image: Fundra branding (bar chart icon + "Fundra" 14pt bold italic muted blue) top-right corner; rendered at 3x scale
 - Quote section: minimal styling, no bubble/shadow, just text + refresh icon; fade-out (0.2s easeOut) / fade-in (0.3s easeIn) animation on refresh; footnote italic text, caption author centered, constrained to 260pt width; refresh icon at 50% secondary opacity
 - Easter egg: tap Fundra title → bars deflate and rebuild with spring animation; Export/Save Chart icons also deflate/rebuild in sync; every 3rd tap triggers confetti (80 particles) + earthquake jiggle (fixed 10-step diagonal pattern, ±6–7pt, rigid haptic bursts)
 - One-time tooltip: "Tip: Long-press an account to rename or delete it." (auto-dismisses after 10s, uses @AppStorage)
@@ -110,9 +111,10 @@
 - Conversational style: casual, curious, asks good follow-up questions
 - Says "Done." as the signal to rebuild — don't say it prematurely
 - **NEVER commit or push unless Brian explicitly asks. Wait for approval after every feature change.**
-- Never suggest Brian go to bed, rest, or wrap up for the night — unless he says "Goodnight"
+- Never suggest Brian go to bed, rest, wrap up, wind down, or end the session — in any phrasing. Only say "Goodnight" back if Brian says it first. Never ask if he's done for the night.
 - **Never embellish, flatter, or state unverifiable claims as fact. If you don't know, say so.**
 - **Never make code changes without Brian's explicit go-ahead. Propose first, wait for approval, then act.**
+- **Always use non-deprecated APIs. Target iOS 18+ — no legacy patterns. If unsure, verify before writing.**
 - Next priority: ship v1.2, then Goals feature (Pro, v2)
 - Project roadmap: Fundra v2.0 (Goals + Pro IAP) → Card app → Mini Backgammon (passion project)
 

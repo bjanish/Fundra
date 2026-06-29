@@ -85,3 +85,14 @@ A "drawing straws" app using playing cards. Each person opens the app, draws a r
 - Same philosophy as Fundra: privacy-first, offline, no accounts, just works
 - Separate Xcode project + repo from Fundra
 - Brian is EXCITED about this — don't let it get lost. Bring it up next session.
+
+## Shared Deck (Future Exploration)
+- **Problem:** Currently each device draws independently — duplicates possible. A shared deck (52 cards, no repeats) would be more authentic.
+- **Options to explore:**
+  - **NFC (tap phones together):** Quick pairing, no setup — feels magical. Uses MultipeerConnectivity or CoreNFC.
+  - **MultipeerConnectivity (Bluetooth/WiFi):** Apple's framework for nearby device communication. No internet needed. One phone hosts the deck, others draw from it.
+  - **SharePlay / GroupActivities:** Built for shared experiences. Might be overkill for a card draw.
+  - **QR code room:** One phone generates a room code/QR, others scan to join. Simple, visual.
+  - **AirDrop-style proximity:** Auto-discover nearby players running the app.
+- **Key constraint:** Must stay offline/no-server. Whatever solution we pick should work peer-to-peer.
+- **Decision:** TBD — research MultipeerConnectivity first (it's the most Apple-native, no server, works offline)
