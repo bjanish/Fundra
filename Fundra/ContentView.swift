@@ -2049,6 +2049,7 @@ struct ManageCategoryView: View {
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     var category: Category
     @State private var newName: String = ""
+    @FocusState private var nameFieldFocused: Bool
     
     private var isDuplicateName: Bool {
         let trimmed = newName.trimmingCharacters(in: .whitespaces).lowercased()
@@ -2060,10 +2061,23 @@ struct ManageCategoryView: View {
             Form {
                 Section("Rename") {
                     TextField("Account name", text: $newName)
+                        .textFieldStyle(.plain)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                        )
                         .autocorrectionDisabled()
+                        .focused($nameFieldFocused)
                         .onChange(of: newName) { _, newValue in
                             if newValue.count > 15 { newName = String(newValue.prefix(15)) }
                         }
+                }
+            }
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    nameFieldFocused = true
                 }
             }
             .navigationTitle("")
