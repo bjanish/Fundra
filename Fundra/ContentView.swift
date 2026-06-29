@@ -1202,6 +1202,29 @@ struct MainView: View {
     @ViewBuilder
     private var chartForExport: some View {
         VStack(spacing: 4) {
+            // Branding — top left
+            HStack {
+                HStack(spacing: 3) {
+                    HStack(alignment: .bottom, spacing: 1) {
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(Color(red: 0.43, green: 0.60, blue: 0.76))
+                            .frame(width: 2, height: 3)
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(Color(red: 0.54, green: 0.73, blue: 0.63))
+                            .frame(width: 2, height: 5.5)
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(Color(red: 0.76, green: 0.68, blue: 0.58))
+                            .frame(width: 2, height: 8)
+                    }
+                    Text("Fundra")
+                        .font(.system(size: 14, weight: .bold))
+                        .italic()
+                        .foregroundColor(Color(red: 0.43, green: 0.60, blue: 0.76))
+                }
+                Spacer()
+            }
+            .padding(.bottom, 8)
+            
             // Total
             if currentTotal > 0 {
                 Text(formatFullAmount(currentTotal))

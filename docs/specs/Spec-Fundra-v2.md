@@ -64,7 +64,15 @@ Major update introducing Pro tier with Goals, improved charts, locale-aware curr
 - **Edge case:** If user edits past month and dips below, don't re-fire on next crossing
 - **Pairs with Goals:** "You reached your $5K Emergency Fund goal!" > generic "You crossed $5K"
 
-### 7. Backup & Restore (CSV Import)
+### 7. Design Polish Pass
+- Spacing and alignment consistency audit
+- Typography hierarchy refinement (weight/size relationships)
+- Subtle transitions and micro-animations
+- Dark mode intentionality check
+- Empty states that feel designed
+- Chart styling consistency across all chart types
+
+### 8. Backup & Restore (CSV Import) — do LAST
 - **What:** Allow users to import a previously exported CSV to restore accounts and balances
 - **How:** File picker (`.fileImporter`) reads the CSV, parses accounts/months/amounts, recreates Category + Balance entries in SwiftData
 - **UX:** Button in a settings/data section (or alongside existing Export) — "Import Backup"
@@ -72,14 +80,7 @@ Major update introducing Pro tier with Goals, improved charts, locale-aware curr
 - **Pairs with existing Export:** Together they form a complete backup/restore workflow
 - **Privacy-first:** No iCloud, no accounts — just a local file the user controls
 - **Pro-only:** TBD — could be free (goodwill) or Pro (value-add)
-
-### 8. Design Polish Pass
-- Spacing and alignment consistency audit
-- Typography hierarchy refinement (weight/size relationships)
-- Subtle transitions and micro-animations
-- Dark mode intentionality check
-- Empty states that feel designed
-- Chart styling consistency across all chart types
+- **Why last:** Export format needs to include all v2 data (Goals, etc.) — build once with final schema
 
 ---
 
