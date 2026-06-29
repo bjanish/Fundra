@@ -50,7 +50,8 @@
 - Onboarding: placeholder text "Name" (not "Account name"), input spacing 15pt, "Add another" uses `plus.circle` SF Symbol in muted blue
 - Onboarding: "Get Started" button uses .controlSize(.regular), 30pt top padding above it, pinned below inputs (no Spacer push)
 - Onboarding: tap outside text fields dismisses keyboard (contentShape + onTapGesture clearing focus)
-- Record sheet: muted blue ringed dot (10pt outer stroke, 5pt inner fill) before "Record date" label — same dot style as Growth chart, ties the sheet to Fundra branding; DatePicker tinted to matching muted blue
+- Widget: small + medium home screen widgets showing total savings, Fundra branding (20pt bold italic), 3-bar icon; adaptive background (white light, near-black dark); date text 70% white dark / 40% white light; refreshes on Record save via WidgetCenter
+- Lock screen: branded with mini bar chart icon (4pt bars, 16x16) + "Fundra" 28pt bold italic muted blue with shadow (matches main screen header)
 - Text field style (app-wide standard): `.plain` style with manual `RoundedRectangle(cornerRadius: 10)` stroke (secondary 0.3 opacity, 1pt), 12pt horizontal / 8pt vertical padding — use this instead of `.roundedBorder` everywhere
 - Record pre-fills amounts when editing an existing month; shows previous month's values as gray placeholder text for new months
 - Monthly reminder notification: fires on the 1st of every month at 9 AM ("Time to record — update your savings totals in Fundra"). Permission requested once after first Record save, stored in @AppStorage. No settings UI — users manage via iOS Settings if they want to disable.

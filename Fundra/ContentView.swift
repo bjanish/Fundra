@@ -1276,8 +1276,7 @@ struct RecordMonthView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Category.sortOrder) private var categories: [Category]
     @AppStorage("hasAskedNotificationPermission") private var hasAskedNotification = false
-    @AppStorage("reviewPromptedAt3") private var reviewPromptedAt3 = false
-    @AppStorage("reviewPromptedAt6") private var reviewPromptedAt6 = false
+    @AppStorage("recordSaveCount") private var recordSaveCount = 0
     
     @State private var selectedDate = Date()
     @State private var amounts: [String] = []
@@ -1293,7 +1292,7 @@ struct RecordMonthView: View {
                         // Screenshot mode: restrict to seeded date (looks like production)
                         let screenshotMaxDate = Calendar.current.date(from: DateComponents(year: 2026, month: 4, day: 15))!
                         DatePicker(selection: $selectedDate, in: ...screenshotMaxDate, displayedComponents: .date) {
-                            HStack(spacing: 6) {
+                            HStack(spacing: 8) {
                                 ZStack {
                                     Circle()
                                         .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
@@ -1311,7 +1310,7 @@ struct RecordMonthView: View {
                     } else if debugMode {
                         // Debug mode: no date restriction
                         DatePicker(selection: $selectedDate, displayedComponents: .date) {
-                            HStack(spacing: 6) {
+                            HStack(spacing: 8) {
                                 ZStack {
                                     Circle()
                                         .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
@@ -1328,7 +1327,7 @@ struct RecordMonthView: View {
                             .padding(.leading, 4)
                     } else {
                         DatePicker(selection: $selectedDate, in: ...Date(), displayedComponents: .date) {
-                            HStack(spacing: 6) {
+                            HStack(spacing: 8) {
                                 ZStack {
                                     Circle()
                                         .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
@@ -1346,7 +1345,7 @@ struct RecordMonthView: View {
                     }
                     #else
                     DatePicker(selection: $selectedDate, in: ...Date(), displayedComponents: .date) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 8) {
                             ZStack {
                                 Circle()
                                     .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
@@ -1527,20 +1526,11 @@ struct RecordMonthView: View {
         
         try? modelContext.save()
         
-        // Request review based on unique months recorded
-        let allBalancesDescriptor = FetchDescriptor<Balance>()
-        if let allBalances = try? modelContext.fetch(allBalancesDescriptor) {
-            let uniqueMonths = Set(allBalances.map { "\($0.year)-\($0.month)" }).count
-            if uniqueMonths >= 3 && !reviewPromptedAt3 {
-                reviewPromptedAt3 = true
-                if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
-                    SKStoreReviewController.requestReview(in: scene)
-                }
-            } else if uniqueMonths >= 6 && !reviewPromptedAt6 {
-                reviewPromptedAt6 = true
-                if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
-                    SKStoreReviewController.requestReview(in: scene)
-                }
+        // Request review on 3rd and 6th save
+        recordSaveCount += 1
+        if recordSaveCount == 3 || recordSaveCount == 6 {
+            if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+                SKStoreReviewController.requestReview(in: scene)
             }
         }
         
@@ -1706,7 +1696,7 @@ struct GrowthSummaryView: View {
                         let firstDate = Calendar.current.date(from: DateComponents(year: first.year, month: first.month, day: first.day)) ?? Date()
                         let selectedDate = Calendar.current.date(from: DateComponents(year: selected.year, month: selected.month, day: selected.day)) ?? Date()
                         
-                        HStack(spacing: 6) {
+                        HStack(spacing: 7) {
                             ZStack {
                                 Circle()
                                     .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
@@ -1727,7 +1717,7 @@ struct GrowthSummaryView: View {
                             let priorDate = Calendar.current.date(from: DateComponents(year: priorPeriod.year, month: priorPeriod.month, day: priorPeriod.day)) ?? Date()
                             let monthChange = selectedTotal - priorTotal
                             let monthPct = priorTotal > 0 ? (monthChange / priorTotal) * 100 : 0
-                            HStack(spacing: 6) {
+                            HStack(spacing: 7) {
                                 ZStack {
                                     Circle()
                                         .stroke(Color(red: 0.54, green: 0.73, blue: 0.63), lineWidth: 1.5)
@@ -1750,7 +1740,7 @@ struct GrowthSummaryView: View {
                             }
                         }
                         
-                        HStack(spacing: 6) {
+                        HStack(spacing: 7) {
                             ZStack {
                                 Circle()
                                     .stroke(Color(red: 0.76, green: 0.68, blue: 0.58), lineWidth: 1.5)

@@ -5,7 +5,10 @@
 2. Edit Balance: rename field auto-focuses with cursor when pencil is tapped
 3. Lock screen: branded with mini bar chart icon + "Fundra" in 28pt bold italic muted blue with shadow (matches main screen)
 4. Growth Summary: preview chart shown when viewing the first month (replaces "Close and swipe" dead-end message)
+5. Home screen widget (small + medium): shows total savings in moneyGreen, Fundra branding with 3-bar icon, last recorded month; adaptive background (white light / near-black dark); refreshes after each Record save
 
 ## Developer-Only
-5. Screenshot mode: DatePicker restricted to Apr 15, 2026 (matches production behavior)
-6. App review prompt: triggers at 3 and 6 unique months recorded (SKStoreReviewController, AppStorage flags to prevent repeat)
+6. Screenshot mode: DatePicker restricted to Apr 15, 2026 (matches production behavior)
+7. App review prompt: triggers on 3rd and 6th Record save (SKStoreReviewController, simple counter via AppStorage)
+8. SwiftData moved to shared App Group container (group.com.fundra.shared) for widget access; migration copies existing store on first launch
+9. WidgetCenter.shared.reloadAllTimelines() called after Record save
