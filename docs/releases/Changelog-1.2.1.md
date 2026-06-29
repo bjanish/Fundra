@@ -10,6 +10,6 @@
 
 ## Developer-Only
 6. Screenshot mode: DatePicker restricted to Apr 15, 2026 (matches production behavior)
-7. App review prompt: triggers on 3rd and 6th Record save (SKStoreReviewController, simple counter via AppStorage)
+7. App review prompt: triggers on 3rd and 6th Record save (AppStore.requestReview(in:), simple counter via AppStorage)
 8. SwiftData moved to shared App Group container (group.com.fundra.shared) for widget access; migration copies existing store on first launch
 9. WidgetCenter.shared.reloadAllTimelines() called after Record save

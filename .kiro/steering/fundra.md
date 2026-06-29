@@ -55,6 +55,8 @@
 - Text field style (app-wide standard): `.plain` style with manual `RoundedRectangle(cornerRadius: 10)` stroke (secondary 0.3 opacity, 1pt), 12pt horizontal / 8pt vertical padding — use this instead of `.roundedBorder` everywhere
 - Record pre-fills amounts when editing an existing month; shows previous month's values as gray placeholder text for new months
 - Monthly reminder notification: fires on the 1st of every month at 9 AM ("Time to record — update your savings totals in Fundra"). Permission requested once after first Record save, stored in @AppStorage. No settings UI — users manage via iOS Settings if they want to disable.
+- App review prompt: AppStore.requestReview(in:) on 3rd and 6th Record save (counter in @AppStorage). No UI — Apple controls display. Uses 2 of 3 annual slots.
+- Growth Summary spacing: dot+amount pairs grouped (4pt internal, 16pt between sections); dot-to-text spacing 7pt
 - Edit Balance sheet: pencil icon next to account name for inline rename (discoverable path; long-press context menu stays as power-user path); "Done" button turns blue only when name has changed
 
 ## Validation Rules
