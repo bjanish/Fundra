@@ -1692,69 +1692,75 @@ struct GrowthSummaryView: View {
                     let priorPeriod = selectedIndex > 0 ? periods[selectedIndex - 1] : nil
                     let priorTotal = priorPeriod != nil ? total(year: priorPeriod!.year, month: priorPeriod!.month) : nil
                     
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 16) {
                         let firstDate = Calendar.current.date(from: DateComponents(year: first.year, month: first.month, day: first.day)) ?? Date()
                         let selectedDate = Calendar.current.date(from: DateComponents(year: selected.year, month: selected.month, day: selected.day)) ?? Date()
                         
-                        HStack(spacing: 7) {
-                            ZStack {
-                                Circle()
-                                    .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
-                                    .frame(width: 10, height: 10)
-                                Circle()
-                                    .fill(Color(red: 0.43, green: 0.60, blue: 0.76))
-                                    .frame(width: 5, height: 5)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 7) {
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color(red: 0.43, green: 0.60, blue: 0.76), lineWidth: 1.5)
+                                        .frame(width: 10, height: 10)
+                                    Circle()
+                                        .fill(Color(red: 0.43, green: 0.60, blue: 0.76))
+                                        .frame(width: 5, height: 5)
+                                }
+                                Text("\(firstDate, format: .dateTime.month(.wide)) (first recorded)")
                             }
-                            Text("\(firstDate, format: .dateTime.month(.wide)) (first recorded)")
+                                .foregroundColor(.secondary)
+                            Text(formatFullAmount(firstTotal))
+                                .font(.title2)
+                                .fontWeight(.bold)
                         }
-                            .foregroundColor(.secondary)
-                        Text(formatFullAmount(firstTotal))
-                            .font(.title2)
-                            .fontWeight(.bold)
                         
                         if let priorTotal = priorTotal, let priorPeriod = priorPeriod,
                            !(priorPeriod.year == first.year && priorPeriod.month == first.month) {
                             let priorDate = Calendar.current.date(from: DateComponents(year: priorPeriod.year, month: priorPeriod.month, day: priorPeriod.day)) ?? Date()
                             let monthChange = selectedTotal - priorTotal
                             let monthPct = priorTotal > 0 ? (monthChange / priorTotal) * 100 : 0
-                            HStack(spacing: 7) {
-                                ZStack {
-                                    Circle()
-                                        .stroke(Color(red: 0.54, green: 0.73, blue: 0.63), lineWidth: 1.5)
-                                        .frame(width: 10, height: 10)
-                                    Circle()
-                                        .fill(Color(red: 0.54, green: 0.73, blue: 0.63))
-                                        .frame(width: 5, height: 5)
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 7) {
+                                    ZStack {
+                                        Circle()
+                                            .stroke(Color(red: 0.54, green: 0.73, blue: 0.63), lineWidth: 1.5)
+                                            .frame(width: 10, height: 10)
+                                        Circle()
+                                            .fill(Color(red: 0.54, green: 0.73, blue: 0.63))
+                                            .frame(width: 5, height: 5)
+                                    }
+                                    Text("\(priorDate, format: .dateTime.month(.wide)) (prior month)")
                                 }
-                                Text("\(priorDate, format: .dateTime.month(.wide)) (prior month)")
-                            }
-                                .foregroundColor(.secondary)
-                            HStack(spacing: 6) {
-                                Text(formatFullAmount(priorTotal))
-                                    .font(.title2)
-                                    .fontWeight(.bold)
                                     .foregroundColor(.secondary)
-                                Text("(\(monthChange >= 0 ? "+" : "-")\(formatFullAmount(abs(monthChange))), \(monthPct, specifier: "%.1f")%)")
-                                    .font(.system(size: 15))
-                                    .foregroundColor(monthChange >= 0 ? moneyGreen : .red)
+                                HStack(spacing: 6) {
+                                    Text(formatFullAmount(priorTotal))
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.secondary)
+                                    Text("(\(monthChange >= 0 ? "+" : "-")\(formatFullAmount(abs(monthChange))), \(monthPct, specifier: "%.1f")%)")
+                                        .font(.system(size: 15))
+                                        .foregroundColor(monthChange >= 0 ? moneyGreen : .red)
+                                }
                             }
                         }
                         
-                        HStack(spacing: 7) {
-                            ZStack {
-                                Circle()
-                                    .stroke(Color(red: 0.76, green: 0.68, blue: 0.58), lineWidth: 1.5)
-                                    .frame(width: 10, height: 10)
-                                Circle()
-                                    .fill(Color(red: 0.76, green: 0.68, blue: 0.58))
-                                    .frame(width: 5, height: 5)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 7) {
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color(red: 0.76, green: 0.68, blue: 0.58), lineWidth: 1.5)
+                                        .frame(width: 10, height: 10)
+                                    Circle()
+                                        .fill(Color(red: 0.76, green: 0.68, blue: 0.58))
+                                        .frame(width: 5, height: 5)
+                                }
+                                Text("\(selectedDate, format: .dateTime.month(.wide)) (current)")
                             }
-                            Text("\(selectedDate, format: .dateTime.month(.wide)) (current)")
+                                .foregroundColor(.secondary)
+                            Text(formatFullAmount(selectedTotal))
+                                .font(.title2)
+                                .fontWeight(.bold)
                         }
-                            .foregroundColor(.secondary)
-                        Text(formatFullAmount(selectedTotal))
-                            .font(.title2)
-                            .fontWeight(.bold)
                     }
                     .padding(.horizontal)
                     .padding(.top)
