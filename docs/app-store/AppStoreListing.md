@@ -25,7 +25,11 @@ PRIVACY FIRST
 Your data stays on your device. Fundra never connects to the internet, never collects analytics, and never sees your financial information. What you save is yours alone.
 
 ## Keywords (100 chars max)
-savings,tracker,budget,finance,money,growth,accounts,balance,offline,private,simple,goal,monthly
+budget,finance,money,growth,balance,offline,private,simple,goal,monthly,cash,wealth,plan,target
+
+## Keyword History
+- v1.0–v1.2: savings,tracker,budget,finance,money,growth,accounts,balance,offline,private,simple,goal,monthly
+- v1.2.1+: budget,finance,money,growth,balance,offline,private,simple,goal,monthly,cash,wealth,plan,target (removed duplicates from name/subtitle, added cash/wealth/plan/target)
 
 ## Category
 Finance
