@@ -7,7 +7,9 @@
 4. Growth Summary: preview chart shown when viewing the first month (replaces "Close and swipe" dead-end message)
 5. Home screen widget (small + medium): shows total savings in moneyGreen, Fundra branding with 3-bar icon, last recorded month; adaptive background (white light / near-black dark); refreshes after each Record save
 6. Manage Account (long-press rename): rounded border field + auto-focus (matches Edit Balance pencil rename)
-7. Exported chart image: Fundra branding (bar chart icon + italic "Fundra") added top-left
+7. Exported chart image: Fundra branding (bar chart icon + italic "Fundra") added top-right
+8. Add Account: text fields use rounded border style (matches app-wide standard)
+9. Record: scroll dismisses numpad immediately (.scrollDismissesKeyboard(.immediately))
 
 ## Developer-Only
 6. Screenshot mode: DatePicker restricted to Apr 15, 2026 (matches production behavior)

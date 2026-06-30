@@ -1305,6 +1305,7 @@ struct RecordMonthView: View {
     @State private var amounts: [String] = []
     @State private var placeholders: [String] = []
     @State private var isReady = false
+    @FocusState private var focusedAmountField: Int?
     
     var body: some View {
         NavigationStack {
@@ -1402,6 +1403,7 @@ struct RecordMonthView: View {
                                         .foregroundColor(.secondary)
                                     TextField(placeholders.indices.contains(index) ? placeholders[index] : "0.00", text: $amounts[index])
                                         .font(.title3)
+                                        .focused($focusedAmountField, equals: index)
                                         .onChange(of: amounts[index]) { _, newValue in
                                             let filtered = filterAmountInput(newValue)
                                             if filtered != newValue { amounts[index] = filtered }
@@ -1421,6 +1423,7 @@ struct RecordMonthView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
+            .scrollDismissesKeyboard(.immediately)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     HStack(spacing: 6) {
@@ -2203,6 +2206,13 @@ struct AddAccountView: View {
                 Section("Account Name") {
                     TextField("Account name", text: $accountName)
                         .font(.title3)
+                        .textFieldStyle(.plain)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                        )
                         .autocorrectionDisabled()
                         .onChange(of: accountName) { _, newValue in
                             if newValue.count > 15 { accountName = String(newValue.prefix(15)) }
@@ -2216,6 +2226,13 @@ struct AddAccountView: View {
                             .foregroundColor(.secondary)
                         TextField("0.00", text: $balanceText)
                             .font(.title3)
+                            .textFieldStyle(.plain)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                            )
                             .onChange(of: balanceText) { _, newValue in
                                 let filtered = filterAmountInput(newValue)
                                 if filtered != newValue { balanceText = filtered }
