@@ -1993,6 +1993,13 @@ struct EditBalanceView: View {
                             .foregroundColor(.secondary)
                         TextField("0.00", text: $amountText)
                             .font(.title3)
+                            .textFieldStyle(.plain)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                            )
                             .onChange(of: amountText) { _, newValue in
                                 let filtered = filterAmountInput(newValue)
                                 if filtered != newValue { amountText = filtered }
