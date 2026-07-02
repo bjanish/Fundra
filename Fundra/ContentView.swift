@@ -1989,10 +1989,10 @@ struct EditBalanceView: View {
                     }
                     HStack {
                         Text(currencySymbol)
-                            .font(.title3)
+                            .font(.body)
                             .foregroundColor(.secondary)
                         TextField("0.00", text: $amountText)
-                            .font(.title3)
+                            .font(.body)
                             .textFieldStyle(.plain)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
