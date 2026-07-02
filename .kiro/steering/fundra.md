@@ -53,7 +53,7 @@
 - Onboarding: tap outside text fields dismisses keyboard (contentShape + onTapGesture clearing focus)
 - Widget: small + medium home screen widgets showing total savings, Fundra branding (20pt bold italic), 3-bar icon; adaptive background (white light, near-black dark); date text 70% white dark / 40% white light; refreshes on Record save via WidgetCenter
 - Lock screen: branded with mini bar chart icon (4pt bars, 16x16) + "Fundra" 28pt bold italic muted blue with shadow (matches main screen header)
-- Text field style (app-wide standard): `.plain` style with manual `RoundedRectangle(cornerRadius: 10)` stroke (secondary 0.3 opacity, 1pt), 12pt horizontal / 8pt vertical padding — use this instead of `.roundedBorder` everywhere
+- Text field style (app-wide standard): `.plain` style with manual `RoundedRectangle(cornerRadius: 10)` stroke (secondary 0.3 opacity, 1pt), 12pt horizontal / 8pt vertical padding, `.body` font — use this instead of `.roundedBorder` everywhere
 - Record pre-fills amounts when editing an existing month; shows previous month's values as gray placeholder text for new months
 - Monthly reminder notification: fires on the 1st of every month at 9 AM ("Time to record — update your savings totals in Fundra"). Permission requested once after first Record save, stored in @AppStorage. No settings UI — users manage via iOS Settings if they want to disable.
 - App review prompt: AppStore.requestReview(in:) on 3rd and 6th Record save (counter in @AppStorage). No UI — Apple controls display. Uses 2 of 3 annual slots.
@@ -99,7 +99,8 @@
 - Uses "debug mode" to mean toggling `debugMode` in ContentView.swift
 - Uses "screenshot mode" to mean toggling `screenshotMode` in ContentView.swift
 - Uses "turn off/on debug mode" as shorthand — just flip the bool
-- Uses "use my data" to mean `useRealisticData = true`; "use growth data" to mean `useRealisticData = false`
+- Uses "use my data" to mean: set `screenshotMode = false`, `debugMode = true`, `useRealisticData = true` (seeds 6 accounts: Cash, Apple, FCCU, Inspira, Moomoo, Forbright with June data)
+- Uses "use growth data" to mean `useRealisticData = false`
 - Uses "put it in screenshot mode" to mean: set `screenshotMode = true`, `debugMode = false` (always uses growth data regardless of useRealisticData)
 - Uses "put it in debug mode" to mean: set `screenshotMode = false`, `debugMode = true`, don't change useRealisticData
 - Occasionally types fast and makes typos — don't correct them, just understand intent
@@ -128,6 +129,7 @@
 - ~~Submit v1.1~~ ✅ Submitted for review
 - ~~Submit v1.1.1~~ ✅ Live on App Store
 - ~~Submit v1.2~~ ✅ Live on App Store
+- ~~Submit v1.2.1~~ ✅ Live on App Store (July 1)
 
 ## Deployment
 - GitHub repo: github.com/bjanish/Fundra (private)

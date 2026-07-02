@@ -14,6 +14,7 @@ import UIKit
 struct FundraApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var isUnlocked = false
+    @State private var backgroundedAt: Date? = nil
     
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -62,7 +63,12 @@ struct FundraApp: App {
         .modelContainer(sharedModelContainer)
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background {
-                isUnlocked = false
+                backgroundedAt = Date()
+            } else if newPhase == .active {
+                if let backgroundedAt, Date().timeIntervalSince(backgroundedAt) > 30 {
+                    isUnlocked = false
+                }
+                self.backgroundedAt = nil
             }
         }
     }

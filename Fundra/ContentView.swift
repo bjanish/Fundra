@@ -13,7 +13,7 @@ import WidgetKit
 
 // MARK: - Screenshot Mode (DEBUG only)
 #if DEBUG
-let screenshotMode = true  // Seeds data, skips Face ID, no date restriction — looks like production (for App Store screenshots)
+let screenshotMode = false  // Seeds data, skips Face ID, no date restriction — looks like production (for App Store screenshots)
 let debugMode = false         // Everything screenshot mode does + debug overlays (dark/light toggle, etc.)
 let useRealisticData = true  // true = 6 accounts, 1 month (June); false = 3 accounts, 3 months (growth testing)
 #endif
@@ -2205,7 +2205,7 @@ struct AddAccountView: View {
             Form {
                 Section("Account Name") {
                     TextField("Account name", text: $accountName)
-                        .font(.title3)
+                        .font(.body)
                         .textFieldStyle(.plain)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
@@ -2222,10 +2222,10 @@ struct AddAccountView: View {
                 Section("Initial Balance") {
                     HStack {
                         Text(currencySymbol)
-                            .font(.title3)
+                            .font(.body)
                             .foregroundColor(.secondary)
                         TextField("0.00", text: $balanceText)
-                            .font(.title3)
+                            .font(.body)
                             .textFieldStyle(.plain)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
