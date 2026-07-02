@@ -1399,10 +1399,10 @@ struct RecordMonthView: View {
                                     .foregroundColor(.secondary)
                                 HStack {
                                     Text(currencySymbol)
-                                        .font(.title3)
+                                        .font(.body)
                                         .foregroundColor(.secondary)
                                     TextField(placeholders.indices.contains(index) ? placeholders[index] : "0.00", text: $amounts[index])
-                                        .font(.title3)
+                                        .font(.body)
                                         .focused($focusedAmountField, equals: index)
                                         .onChange(of: amounts[index]) { _, newValue in
                                             let filtered = filterAmountInput(newValue)
