@@ -2210,7 +2210,7 @@ struct AddAccountView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Account Name") {
+                Section {
                     TextField("Account name", text: $accountName)
                         .font(.body)
                         .textFieldStyle(.plain)
@@ -2224,9 +2224,7 @@ struct AddAccountView: View {
                         .onChange(of: accountName) { _, newValue in
                             if newValue.count > 15 { accountName = String(newValue.prefix(15)) }
                         }
-                }
-                
-                Section("Initial Balance") {
+                    
                     HStack {
                         Text(currencySymbol)
                             .font(.body)
