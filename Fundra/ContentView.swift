@@ -1386,7 +1386,7 @@ struct RecordMonthView: View {
                         .padding(.leading, 4)
                     #endif
                     Text("One entry per month. Recording again will update that month.")
-                        .font(.caption)
+                        .font(.system(size: 14))
                         .foregroundColor(.secondary)
                 }
                 
