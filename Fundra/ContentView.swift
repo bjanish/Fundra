@@ -2094,9 +2094,10 @@ struct ManageCategoryView: View {
             Form {
                 Section("Rename") {
                     TextField("Account name", text: $newName)
+                        .font(.body)
                         .textFieldStyle(.plain)
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, 6)
                         .background(
                             RoundedRectangle(cornerRadius: 10)
                                 .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
