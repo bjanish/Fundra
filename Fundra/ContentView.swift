@@ -1994,12 +1994,6 @@ struct EditBalanceView: View {
                         TextField("0.00", text: $amountText)
                             .font(.body)
                             .textFieldStyle(.plain)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
-                            )
                             .onChange(of: amountText) { _, newValue in
                                 let filtered = filterAmountInput(newValue)
                                 if filtered != newValue { amountText = filtered }
@@ -2008,6 +2002,12 @@ struct EditBalanceView: View {
                             .keyboardType(.decimalPad)
                             #endif
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                    )
                 }
                 
                 if let updatedAt = balance.updatedAt {
@@ -2097,7 +2097,7 @@ struct ManageCategoryView: View {
                         .font(.body)
                         .textFieldStyle(.plain)
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.vertical, 8)
                         .background(
                             RoundedRectangle(cornerRadius: 10)
                                 .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
@@ -2233,12 +2233,6 @@ struct AddAccountView: View {
                         TextField("0.00", text: $balanceText)
                             .font(.body)
                             .textFieldStyle(.plain)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
-                            )
                             .onChange(of: balanceText) { _, newValue in
                                 let filtered = filterAmountInput(newValue)
                                 if filtered != newValue { balanceText = filtered }
@@ -2247,6 +2241,12 @@ struct AddAccountView: View {
                             .keyboardType(.decimalPad)
                             #endif
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                    )
                 }
             }
             .navigationTitle("")
